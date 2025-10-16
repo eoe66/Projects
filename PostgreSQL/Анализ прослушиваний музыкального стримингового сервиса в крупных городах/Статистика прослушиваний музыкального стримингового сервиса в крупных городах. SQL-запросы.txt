@@ -1,0 +1,502 @@
+1. Изучаем структуру данных.
+
+SELECT *
+FROM songs
+LIMIT 10;
+
+id	user_id	track	artist	genre	city	day	duration	listen
+1	40897	Kamigata To Boots	The Mass Missile	rock	Санкт-Петербург	среда	272	0.81
+2	11791	Delayed Because of Accident	Andreas Rönnberg	rock	Москва	пятница	353	0.88
+3	2885	Funiculì funiculà	Mario Lanza	pop	Санкт-Петербург	среда	360	0.13
+4	25252	Dragons in the Sunset	Fire + Ice	folk	Санкт-Петербург	понедельник	350	0.48
+5	35980	Soul People	Space Echo	dance	Москва	понедельник	353	0.32
+6	19706	Преданная	IMPERVTOR	rusrap	Санкт-Петербург	пятница	343	0.89
+7	10337	True	Roman Messer	dance	Москва	среда	348	0.33
+8	38247	Feeling This Way	Polina Griffith	dance	Москва	среда	132	0.63
+9	21761	И вновь продолжается бой	неизвестный исполнитель	ruspop	Москва	пятница	235	0.52
+10	36753	Pessimist	неизвестный исполнитель	dance	Санкт-Петербург	среда	275	0.23
+
+
+2. Выгружаем первые 15 строк с информацией об исполнителе, названии песни и музыкальном жанре.
+
+SELECT artist,
+       track,
+       genre
+FROM songs
+LIMIT 15;
+
+artist	track	genre
+The Mass Missile	Kamigata To Boots	rock
+Andreas Rönnberg	Delayed Because of Accident	rock
+Mario Lanza	Funiculì funiculà	pop
+Fire + Ice	Dragons in the Sunset	folk
+Space Echo	Soul People	dance
+IMPERVTOR	Преданная	rusrap
+Roman Messer	True	dance
+Polina Griffith	Feeling This Way	dance
+неизвестный исполнитель	И вновь продолжается бой	ruspop
+неизвестный исполнитель	Pessimist	dance
+Shireen Abdul Wahab	Gool la Mita	world
+Pink Floyd Floydhead	Is There Anybody Out There? (Panoramic Paralysis) Mix	electronic
+Ильдар Хакимов	Мина син генэ кирэк	pop
+Detroit Grand Pubahs	After School Special	dance
+Arabesque	Make Love Whenever You Can	pop
+
+
+3. Выгружаем все уникальные жанры музыки из таблицы. 
+
+SELECT DISTINCT genre
+FROM songs
+ORDER BY genre;
+
+genre
+acid
+acoustic
+action
+adult
+africa
+afrikaans
+alternative
+alternativepunk
+ambient
+americana
+animated
+anime
+arabesk
+arabic
+arena
+argentinetango
+art
+audiobook
+author
+avantgarde
+axé
+baile
+balkan
+beats
+bigroom
+black
+bluegrass
+blues
+bollywood
+bossa
+brazilian
+breakbeat
+breaks
+broadway
+cantautori
+cantopop
+canzone
+caribbean
+caucasian
+celtic
+chamber
+chanson
+children
+chill
+chinese
+choral
+christian
+christmas
+classical
+classicmetal
+club
+colombian
+comedy
+conjazz
+contemporary
+country
+cuban
+dance
+dancehall
+dancepop
+dark
+death
+deep
+deutschrock
+deutschspr
+dirty
+disco
+dnb
+documentary
+downbeat
+downtempo
+drum
+dub
+dubstep
+eastern
+easy
+electronic
+electropop
+emo
+entehno
+epicmetal
+estrada
+ethnic
+eurofolk
+european
+experimental
+extrememetal
+fado
+fairytail
+film
+fitness
+flamenco
+folk
+folklore
+folkmetal
+folkrock
+folktronica
+forró
+frankreich
+französisch
+french
+funk
+future
+gangsta
+garage
+german
+ghazal
+gitarre
+glitch
+gospel
+gothic
+grime
+grunge
+gypsy
+handsup
+hardcore
+hard'n'heavy
+hardstyle
+hardtechno
+hip
+hiphop
+hip-hop
+historisch
+holiday
+hop
+horror
+house
+hymn
+idm
+ïîï
+independent
+indian
+indie
+indipop
+industrial
+inspirational
+instrumental
+international
+irish
+jam
+japanese
+jazz
+jewish
+jpop
+jungle
+karadeniz
+karaoke
+kayokyoku
+korean
+k-pop
+laiko
+latin
+latino
+leftfield
+local
+lounge
+loungeelectronic
+lovers
+malaysian
+mandopop
+marschmusik
+meditative
+mediterranean
+melodic
+metal
+metalcore
+mexican
+middle
+minimal
+miscellaneous
+modern
+mood
+mpb
+muslim
+native
+neoklassik
+neue
+new
+newage
+newwave
+nu
+nujazz
+numetal
+oceania
+old
+opera
+orchestral
+other
+piano
+podcasts
+pop
+popdance
+popelectronic
+popeurodance
+poprussian
+post
+posthardcore
+postrock
+power
+progmetal
+
+
+
+4. Определим, какие жанры наиболее популярны среди пользователей. Выгрузим топ-5 жанров с самым большим количеством прослушиваний.
+
+SELECT genre,
+       COUNT(*) AS count_tr
+FROM songs
+GROUP BY genre
+ORDER BY count_tr DESC
+LIMIT 5;
+
+
+genre	count_tr
+pop	8142
+dance	6295
+rock	5756
+electronic	5478
+hip	2912
+
+
+5. Длительность прослушивания треков разных исполнителей. Преобразуем время из секунд в минуты. 
+
+SELECT track,
+       artist,
+       CAST(duration AS float) / 60 AS duration_min
+FROM songs;
+
+
+track	artist	duration_min
+Kamigata To Boots	The Mass Missile	4.53333
+Delayed Because of Accident	Andreas Rönnberg	5.88333
+Funiculì funiculà	Mario Lanza	6
+Dragons in the Sunset	Fire + Ice	5.83333
+Soul People	Space Echo	5.88333
+Преданная	IMPERVTOR	5.71667
+True	Roman Messer	5.8
+Feeling This Way	Polina Griffith	2.2
+И вновь продолжается бой	неизвестный исполнитель	3.91667
+Pessimist	неизвестный исполнитель	4.58333
+............  ...........  ............
+
+
+6. Жанры, у которых суммарная длительность прослушиваний треков превышает 1600 минут. 
+
+SELECT genre,
+       CAST(SUM(CAST(duration AS float) / 60) AS numeric(10, 2)) AS sum_duration_min
+FROM songs
+GROUP BY genre
+HAVING CAST(SUM(CAST(duration AS float) / 60) AS numeric(10, 2)) > 1600
+ORDER BY sum_duration_min DESC;
+
+
+genre	sum_duration_min
+pop	34119.8
+dance	26502.4
+rock	24154.9
+electronic	22870.5
+hip	12237.5
+classical	9448.17
+alternative	8405.52
+world	8081.8
+ruspop	7069.7
+rusrap	6423.18
+jazz	6139.62
+metal	5056.73
+неизвестный жанр	4685.53
+soundtrack	4621.08
+rnb	3954.88
+folk	3945
+latin	3803.17
+rap	3554.02
+indie	2657.77
+reggae	2496.85
+new	2379.02
+rusrock	2272.58
+children	2107.03
+blues	2069.92
+country	1969.53
+punk	1660.63
+
+
+7. Статистика прослушиваний музыки по жанрам:
+общее количество прослушиваний треков;
+суммарная длительность прослушиваний треков;
+минимальная длительность прослушивания треков;
+максимальная длительность прослушивания треков;
+средняя длительность прослушивания треков.
+
+
+SELECT genre,
+       COUNT(*),
+       SUM(duration),
+       MIN(duration),
+       MAX(duration),
+       ROUND(AVG(CAST(duration AS numeric)), 2) AS average
+FROM songs
+GROUP BY genre
+ORDER BY average DESC;
+
+genre	count	sum	min	max	average
+quebecois	1	378	378	378	378
+indipop	1	377	377	377	377
+axé	1	376	376	376	376
+neoklassik	2	749	370	379	374.5
+hardstyle	1	364	364	364	364
+historisch	1	345	345	345	345
+gitarre	1	344	344	344	344
+vi	3	1023	321	370	341
+jam	1	340	340	340	340
+.... ..... .... ......
+
+
+8. Все прослушивания треков жанра pop в городе Москва.
+
+SELECT *
+FROM songs
+WHERE genre = 'pop' AND city = 'Москва'
+
+
+id	user_id	track	artist	genre	city	day	duration	listen
+13	40814	Мина син генэ кирэк	Ильдар Хакимов	pop	Москва	понедельник	156	0.8
+28	34315	Romantici	Viola Valentino	pop	Москва	среда	266	0.67
+44	32308	Нега	Mooncat	pop	Москва	пятница	211	0.2
+45	36515	SOS	Peter Cetera	pop	Москва	среда	212	0.67
+57	36066	Yurak Ezilar	Shoxruz Abadiya	pop	Москва	понедельник	262	1
+59	36006	Banga	неизвестный исполнитель	pop	Москва	понедельник	351	0.51
+64	34770	Run Bobby Run	Lesley Gore	pop	Москва	пятница	189	0.25
+83	33232	Good Enough	Death in The Afternoon	pop	Москва	среда	261	0.22
+....      .....      ......
+
+
+9. Сравним музыкальные вкусы в двух городах — Москве и Санкт-Петербурге. Выгрузим информацию о жанре, городе прослушивания,
+количестве треков жанра и суммарной длительности их прослушивания. 
+
+SELECT city,
+       genre,
+       COUNT(*) AS number_of_tracks,
+       SUM(duration) AS sim_duration 
+FROM songs
+WHERE city IN ('Москва', 'Санкт-Петербург')
+GROUP BY city, genre
+ORDER BY city;
+
+city	genre	number_of_tracks	sim_duration
+Москва	roots	1	                244
+Москва	power	3	                566
+Москва	pop	5753	                1447127
+Москва	adult	16	                4001
+Москва	muslim	3	                777
+Москва	swing	7	                1974
+Москва	hiphop	52	                13257
+
+.....    ......    .......
+
+
+10. Сколько раз треки прослушали менее чем наполовину? Выгрузим общее количество таких прослушиваний и их среднюю длительность в минутах.
+
+SELECT COUNT(*),
+       CEIL(AVG(CAST(duration AS numeric) / 60))
+FROM songs
+WHERE listen < 0.5;
+
+
+count	ceil
+29508	5
+
+
+11. Прослушивания треков в понедельник и среду. Выгрузим день прослушивания, трек, исполнителя, длительность
+ и долю прослушивания для всех воспроизведений в понедельник и среду.
+
+SELECT day,
+       track,
+       artist,
+       duration,
+       listen
+FROM songs
+WHERE day IN ('понедельник', 'среда')
+
+
+day	track	artist	duration	listen
+среда	Kamigata To Boots	The Mass Missile	272	0.81
+среда	Funiculì funiculà	Mario Lanza	360	0.13
+понед	Dragons in the Sunset	Fire + Ice	350	0.48
+понед	Soul People	Space Echo	353	0.32
+среда	True	Roman Messer	348	0.33
+среда	Feeling This Way	Polina Griffith	132	0.63
+.....    .....    .......
+
+
+12. Как слушают треки определённых жанров в крупных городах? Выгрузим данные о треках двух жанров поп и рок, прослушанных в Москве и Санкт-Петербурге. 
+
+SELECT city,
+       genre,
+       track,
+       artist,
+       duration,
+       listen
+FROM  songs
+WHERE genre IN ('pop', 'rock')
+ORDER BY city, genre, listen DESC
+LIMIT 20;
+
+
+city	genre	track	artist	duration	listen
+Москва	pop	Baby Ist Cold Outside	неизвестный исполнитель	206	1
+Москва	pop	Chacony in G Minor	Guildhall String Ensemble	382	1
+Москва	pop	Gitme Seviyorum	Harun Kolçak	185	1
+Москва	pop	Hands On Me	Burns	292	1
+Москва	pop	Hit 'Em Up Style	Carolina Chocolate Drops	231	1
+Москва	pop	Civilisation (Bongo Bongo Bongo)	Danny Kaye	290	1
+Москва	pop	A Beautiful Mess	Jason Mraz	143	1
+Москва	pop	Marionnettiste	Pierre Bachelet	374	1
+Москва	pop	All A Woman Needs	Joan Armatrading	219	1
+Москва	pop	Sunny	The Disco Music Makers	192	1
+Москва	pop	Kao Ti I Ja	Franka	129	1
+Москва	pop	Yurak Ezilar	Shoxruz Abadiya	262	1
+Москва	pop	嘴巴嘟嘟	刘子璇	218	1
+Москва	pop	Sen Maşallah	Güven Yüreyi	246	1
+Москва	pop	Dreamin	Oslo Swan	126	1
+Москва	pop	La valse à mille temps	Mouron	255	1
+Москва	pop	И под новый год...	Алексей Мороз	161	1
+Москва	pop	Кто-то простит	Мурат Насыров	303	1
+Москва	pop	All of Me	Luciana Zogbi	282	1
+Москва	pop	We Need A War	Fischerspooner	150	1
+
+
+
+13. Исполнители, у которых есть более одного трека в одном жанре. 
+
+SELECT artist,
+       genre
+FROM songs
+WHERE artist != 'неизвестный исполнитель'
+GROUP BY artist, genre
+HAVING COUNT(genre) > 1
+ORDER BY genre, artist;
+
+artist	genre
+Jack Trammell	action
+Big Mama Thornton	adult
+Rock Masters	adult
+Sara Jackson-Holman	adult
+Toumani Diabate	africa
+32 Leaves	alternative
+Adam Ronin	alternative
+Against the Current	alternative
+Alex Ebert	alternative
+Alex Turner	alternative
+.....  ......   ........

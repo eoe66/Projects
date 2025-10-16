@@ -1,0 +1,187 @@
+--Проект «Исследование онлайн-игры»
+--Часть1. Разведочный анализ данных
+
+--1. Выведим названия всех таблиц схемы fantasy.
+
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'fantasy'
+;
+--table_name|
+------------+
+--classes   |
+--country   |
+--events    |
+--items     |
+--race      |
+--skills    |
+--users     |
+--
+--Схема fantasy содержит семь таблиц: classes, country, users, events, items, skills, race.
+--В них собрана основная информация об игроках и их активности.
+
+--2. Изучим данные с таблицы users. Получим информацию о названии полей таблицы и типе данных в них,
+--присоединим информацию о первичных и внешних ключах.
+
+WITH
+--выведим названия всех полей и их типы таблицы users
+t1 AS (
+SELECT table_schema, table_name, column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'fantasy' AND table_name = 'users'
+    ),
+--выведим информацию о ключах таблицы users
+t2 AS (      
+SELECT table_schema, table_name, column_name, constraint_name
+FROM information_schema.key_column_usage
+WHERE table_schema = 'fantasy' AND table_name = 'users'
+)
+SELECT
+    t1.table_schema,
+    t1.table_name,
+    t1.column_name,
+    t1.data_type,
+    t2.constraint_name
+FROM t1
+LEFT JOIN t2 AS t2 USING (column_name)
+;
+--table_schema|table_name|column_name    |data_type        |constraint_name    |
+--------------+----------+---------------+-----------------+-------------------+
+--fantasy     |users     |id             |character varying|users_pkey         |
+--fantasy     |users     |tech_nickname  |character varying|                   |
+--fantasy     |users     |class_id       |character varying|users_class_id_fkey|
+--fantasy     |users     |ch_id          |character varying|users_ch_id_fkey   |
+--fantasy     |users     |birthdate      |character varying|                   |
+--fantasy     |users     |pers_gender    |character varying|                   |
+--fantasy     |users     |registration_dt|character varying|                   |
+--fantasy     |users     |server         |character varying|                   |
+--fantasy     |users     |race_id        |character varying|users_race_id_fkey |
+--fantasy     |users     |payer          |integer          |                   |
+--fantasy     |users     |loc_id         |character varying|users_loc_id_fkey  |
+--
+--Таблица users содержит 11 полей, и большинство из них хранят текстовые данные.
+--При этом поле id с идентификатором игрока — это первичный ключ таблицы, а четыре поля 
+--class_id, ch_id, race_id и loc_id — внешние ключи. Можно предположить, что таблица 
+--users связана с таблицами classes, skills, race и country.
+    
+    
+
+--3. Выводим первые строки таблицы users, добавив в выдачу поле row_count с подсчётом общего количества строк в таблице. 
+SELECT *,
+(SELECT COUNT(*) FROM fantasy.users) AS row_count
+FROM fantasy.users   
+LIMIT 5
+;
+--id        |tech_nickname      |class_id|ch_id|birthdate|pers_gender|registration_dt|server  |race_id|payer|loc_id|row_count|
+------------+-------------------+--------+-----+---------+-----------+---------------+--------+-------+-----+------+---------+
+--00-0037846|DivineBarbarian4154|9RD     |JJR2 |6/4/1994 |Male       |1/20/2005      |server_1|B1     |    0|US    |    22214|
+--00-0041533|BoldInvoker7693    |Z3Q     |HQ9N |6/29/1987|Male       |4/8/2022       |server_1|R2     |    0|US    |    22214|
+--00-0045747|NobleAlchemist7633 |382     |IXBW |7/29/1992|Male       |10/12/2013     |server_1|K3     |    0|US    |    22214|
+--00-0055274|SteadfastArcher8318|ZD0     |QSUB |9/14/1985|Female     |4/10/2008      |server_1|R2     |    0|US    |    22214|
+--00-0076100|RadiantProphet353  |YC8     |HQ9N |4/11/1997|Female     |9/29/2013      |server_2|K4     |    1|US    |    22214|
+--
+--Теперь можно зафиксировать содержимое строк. В данных присутствует первичный ключ — идентификатор игрока, поэтому проблему
+--с полными дубликатами строк можно исключить. Всего данные содержат информацию о 22214 игроках.
+
+
+--4. Проверим пропуски в таблице users.  Посчитаем строки с пропусками в полях, которые понадобятся при анализе: 
+--class_id, ch_id, pers_gender, server, race_id, payer, loc_id.
+SELECT COUNT (*)
+FROM fantasy.users
+WHERE class_id IS NULL OR ch_id IS NULL OR pers_gender IS NULL OR server IS NULL OR race_id IS NULL OR payer IS NULL OR loc_id IS NULL
+;
+--count|
+-------+
+--    0|
+--
+--Пропусков в данных нет.
+
+--5. Категориальные данные таблицы users
+--Таблица users содержит информацию об игроках. В данных можно выделить такие категории: характеристика персонажа, его пол,
+--класс, легендарный навык, а также страна регистрации игрока или игровой сервер.
+--Найдем уникальные значения в поле server таблицы users и для каждого сервера количество строк.
+SELECT server, COUNT(*)
+FROM fantasy.users
+GROUP BY server
+--
+--server  |count|
+----------+-----+
+--server_2| 5499|
+--server_1|16715|
+--
+--Игрокам доступно два сервера. При этом на первом сервере примерно в три раза больше игроков, чем на втором.
+
+
+--6. Знакомство с таблицей events. Выводим названия полей, их тип данных и метку о ключевом поле таблицы events
+SELECT c.table_schema,
+       c.table_name,
+       c.column_name,
+       c.data_type,
+       k.constraint_name
+FROM information_schema.columns AS c 
+-- Присоединяем данные с ограничениями полей
+LEFT JOIN information_schema.key_column_usage AS k 
+    USING(table_name, column_name, table_schema)
+-- Фильтруем результат по названию схемы и таблицы
+WHERE table_schema = 'fantasy' AND table_name = 'events'
+ORDER BY c.table_name;
+--
+--table_schema|table_name|column_name   |data_type        |constraint_name      |
+--------------+----------+--------------+-----------------+---------------------+
+--fantasy     |events    |transaction_id|character varying|events_pkey          |
+--fantasy     |events    |id            |character varying|events_id_fkey       |
+--fantasy     |events    |date          |character varying|                     |
+--fantasy     |events    |time          |character varying|                     |
+--fantasy     |events    |item_code     |integer          |events_item_code_fkey|
+--fantasy     |events    |amount        |real             |                     |
+--fantasy     |events    |seller_id     |character varying|                     |
+--
+--Таблица events содержит семь полей, и большинство из них хранит текстовые данные.
+--При этом поле transaction_id с идентификатором транзакции — это первичный ключ таблицы, а два поля id и 
+--item_code — внешние ключи, связывающие данные с таблицами users и items.
+
+--7. Выведем первые пять строк таблицы events, добавив в выдачу поле row_count с подсчётом общего количества строк в таблице
+SELECT *,
+(SELECT COUNT(*) FROM fantasy.events) AS row_count  
+FROM fantasy.events
+LIMIT 5
+;
+--transaction_id|id        |date      |time    |item_code|amount|seller_id|row_count|
+----------------+----------+----------+--------+---------+------+---------+---------+
+--2129235853    |37-5938126|2021-01-03|16:31:49|     6010| 21.41|220381   |  1307678|
+--2129237617    |37-5938126|2021-01-03|16:49:00|     6010| 64.98|54680    |  1307678|
+--2129239381    |37-5938126|2021-01-03|21:05:29|     6010| 50.68|888909   |  1307678|
+--2129241145    |37-5938126|2021-01-03|22:03:02|     6010| 46.49|888902   |  1307678|
+--2129242909    |37-5938126|2021-01-03|22:04:26|     6010| 18.72|888905   |  1307678|
+--
+
+--8. Проверка пропусков в таблице events в полях, которые будут использоваться при анализе: date, time, amount, seller_id.
+SELECT COUNT (*)
+FROM fantasy.events
+WHERE date IS NULL OR time IS NULL OR amount IS NULL OR seller_id IS NULL
+;
+--count |
+--------+
+--508186|
+--
+--В 508186 строках из 1307678 встречаются пропуски хотя бы в одном из полей. 
+
+
+--9.Изучаем пропуски в таблице events. Считаем количество строк с данными в каждом поле
+SELECT 
+COUNT(date) AS data_count,
+COUNT(time) AS data_time,
+COUNT(amount) AS data_amount,
+COUNT(seller_id) AS data_seller_id
+FROM fantasy.events
+WHERE date IS NULL
+  OR time IS NULL
+  OR amount IS NULL
+  OR seller_id IS NULL;
+--
+--data_count|data_time|data_amount|data_seller_id|
+------------+---------+-----------+--------------+
+--    508186|   508186|     508186|             0|
+--
+--Все 508186 пропусков содержатся только в поле seller_id, то есть в данных нет информации о продавце.
+--Видимо, в таком случае покупка совершалась в игровом магазине, а не у других продавцов.

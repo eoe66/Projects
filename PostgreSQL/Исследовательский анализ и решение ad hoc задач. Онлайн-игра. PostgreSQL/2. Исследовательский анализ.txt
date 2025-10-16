@@ -1,0 +1,322 @@
+/* Проект «Исследование онлайн-игры»
+ * Цель проекта: изучить влияние характеристик игроков и их игровых персонажей 
+ * на покупку внутриигровой валюты, а также оценить 
+ * активность игроков при совершении внутриигровых покупок
+*/
+
+-- Часть 2. Исследовательский анализ данных
+-- Задача 1. Исследование доли платящих игроков
+
+-- 1.1. Доля платящих пользователей по всем данным:
+SELECT
+  -- общее количество игроков
+  count(*) AS count_users,
+  -- количество платящих игроков, "1" - игрок покупал  внутриигровую валюту
+  sum(payer) AS count_paying_users,
+  --доля платящих игроков от общего количества пользователей;
+  --формула для расчета доли sum/count, а это и есть avg
+  ROUND(avg(payer) * 1.0, 4) AS share_paying_users
+FROM fantasy.users;
+---------------------------------------------------+
+--count_users|count_paying_users|share_paying_users|
+-------------+------------------+------------------+
+--      22214|              3929|            0.1769|
+---------------------------------------------------+
+
+-- 1.2. Доля платящих пользователей в разрезе расы персонажа:
+SELECT
+  r.race,
+  --количество платящих игроков по расам
+  sum(u.payer) AS count_paying_users_within_race,
+  --общее количество зарегистрированных игроков по расам
+  count(u.payer) AS count_users_within_race,
+  -- доля платящих игроков от общего количества пользователей, зарегистрированных в игре в разрезе каждой расы персонажа.
+  round(avg(u.payer) * 1.0, 4) AS share_paying_users_within_race
+FROM fantasy.users AS u
+--присоединение таблицы с названиями рас
+JOIN fantasy.race AS r USING (race_id)
+GROUP BY r.race
+--сортировка по убыванию доли платящих игроков
+ORDER BY share_paying_users_within_race DESC;
+----------+------------------------------+-----------------------+------------------------------+
+--race    |count_paying_users_within_race|count_users_within_race|share_paying_users_within_race|
+----------+------------------------------+-----------------------+------------------------------+
+--Demon   |                           238|                   1229|                        0.1937|
+--Hobbit  |                           659|                   3648|                        0.1806|
+--Human   |                          1114|                   6328|                        0.1760|
+--Orc     |                           636|                   3619|                        0.1757|
+--Northman|                           626|                   3562|                        0.1757|
+--Angel   |                           229|                   1327|                        0.1726|
+--Elf     |                           427|                   2501|                        0.1707|
+----------+------------------------------+-----------------------+------------------------------+
+
+
+-- Задача 2. Исследование внутриигровых покупок
+
+-- 2.1. Статистические показатели по полю amount:
+WITH
+t1 AS (
+SELECT
+    id,
+    --общее количество покупок по игроку
+    count(*) AS c_t1,
+    --суммарая стоимость всех покупок игрока
+    sum(amount) AS s_t1
+    FROM fantasy.events
+	GROUP BY id 
+),
+t2 AS (
+SELECT
+--среднее значение стоимости покупки
+avg(s_t1 / c_t1)::NUMERIC(10, 2) AS avg_cost_orders
+FROM t1
+),
+t3 AS (
+SELECT
+  --общее количество покупок
+  count(*) AS number_total_orders,
+  --суммарая стоимость всех покупок
+  sum(amount) AS cost_total_orders,
+  --минимальная стоимость покупки
+  min(amount) AS min_cost_orders,
+  --максимальная стоимость покупки
+  max(amount) AS max_cost_orders,
+  --медиана стоимости покупки; медиана - это 0,5 процентиль
+  percentile_disc(0.5) WITHIN GROUP (ORDER BY amount),
+  --стандартное отклонение стоимости покупки
+  stddev(amount)::NUMERIC(10, 2) AS stand_dev_cost_orders
+FROM fantasy.events
+)
+SELECT *
+FROM t3, t2
+---------------------+-----------------+---------------+---------------+---------------+---------------------+---------------+
+--number_total_orders|cost_total_orders|min_cost_orders|max_cost_orders|percentile_disc|stand_dev_cost_orders|avg_cost_orders|
+---------------------+-----------------+---------------+---------------+---------------+---------------------+---------------+
+--            1307678|        686615040|            0.0|       486615.1|          74.86|              2517.35|         740.71|
+---------------------+-----------------+---------------+---------------+---------------+---------------------+---------------+
+
+-- 2.2: Аномальные нулевые покупки:
+SELECT
+  --количество покупок с нулевой стоимостью
+  count(CASE WHEN  amount = '0' THEN '0' END ) AS number_free_orders,
+  --доля покупок с нулевой стоимостью от общего числа покупок
+  round(count(CASE WHEN  amount = '0' THEN '0' END )::numeric / count(*), 4) AS share_free_orders
+FROM fantasy.events;
+--------------------+-----------------+
+--number_free_orders|share_free_orders|
+--------------------+-----------------+
+--               907|           0.0007|
+--------------------+-----------------+
+
+
+-- 2.3: Сравнительный анализ активности платящих и неплатящих игроков:
+WITH
+t1 AS (
+SELECT u.payer, u.id,
+	   --суммарная стоимость покупок на одного игрока
+		sum(e.amount) AS avg_amount,
+		-- количество покупок на одного игрока
+		count(e.amount) AS number_costs
+		FROM fantasy.events AS e
+		LEFT JOIN fantasy.users AS u USING (id)
+		--только ненулевые покупки
+		WHERE  e.amount != '0'
+		GROUP BY u.payer, u.id
+)
+SELECT
+   --переименование категорий 1 и 0
+   CASE WHEN  payer = '0' THEN 'non_payers' ELSE 'payers' END AS groups_players,
+	--количество уникальных игроков
+	count(*) AS number_players,
+	--среднее количество покупок на одного игрока
+	avg(number_costs)::numeric(5, 2) AS avg_number_costs,
+	--средняя суммарная стоимость покупок на одного игрока
+	avg(avg_amount)::numeric(10, 2) AS avg_costs_orders
+FROM t1
+GROUP BY payer
+;
+----------------+--------------+----------------+----------------+
+--groups_players|number_players|avg_number_costs|avg_costs_orders|
+----------------+--------------+----------------+----------------+
+--non_payers    |         11348|           97.56|        48631.74|
+--payers        |          2444|           81.68|        55467.74|
+----------------+--------------+----------------+----------------+
+
+--Тот же запрос, но с разбивкой по расам
+WITH
+t1 AS (
+SELECT u.payer, r.race, u.id,
+	   --суммарная стоимость покупок на одного игрока
+		sum(e.amount) AS avg_amount,
+		-- количество покупок на одного игрока
+		count(e.amount) AS number_costs
+		FROM fantasy.events AS e
+		LEFT JOIN fantasy.users AS u USING (id)
+		--информация о расах
+		LEFT JOIN fantasy.race AS r USING (race_id)
+		--только ненулевые покупки
+		WHERE e.amount != '0'
+		GROUP BY u.payer, r.race, u.id
+)
+SELECT
+	--переименование категорий 1 и 0
+	CASE WHEN  payer = '0' THEN 'non_payers' ELSE 'payers' END AS groups_players,
+	race,
+	--количество уникальных игроков
+	count(*) AS number_players, 
+	--среднее количество покупок на одного игрока
+	avg(number_costs)::numeric(5, 2) AS avg_number_costs,
+	--средняя суммарная стоимость покупок на одного игрока
+	avg(avg_amount)::numeric(10, 2) AS avg_costs_orders
+FROM t1
+GROUP BY payer, race
+ORDER BY payer, avg_costs_orders DESC
+;
+----------------+--------+--------------+----------------+----------------+
+--groups_players|race    |number_players|avg_number_costs|avg_costs_orders|
+----------------+--------+--------------+----------------+----------------+
+--non_payers    |Elf     |          1292|           81.16|        54315.91|
+--non_payers    |Northman|          1823|           88.43|        50671.08|
+--non_payers    |Angel   |           683|          100.12|        49532.94|
+--non_payers    |Human   |          3215|          127.54|        49310.00|
+--non_payers    |Hobbit  |          1865|           84.35|        48689.32|
+--non_payers    |Demon   |           590|           77.20|        43720.78|
+--non_payers    |Orc     |          1880|           84.99|        42744.66|
+--payers        |Northman|           406|           53.68|       115727.03|
+--payers        |Elf     |           251|           66.59|        50908.69|
+--payers        |Human   |           706|           93.43|        47260.71|
+--payers        |Angel   |           137|          140.14|        44359.83|
+--payers        |Hobbit  |           401|           94.42|        42651.94|
+--payers        |Orc     |           396|           66.29|        37085.59|
+--payers        |Demon   |           147|           80.57|        31069.46|
+----------------+--------+--------------+----------------+----------------+
+
+-- 2.4: Популярные эпические предметы:
+WITH
+--СТЕ с расчетами показателей
+t1 AS (SELECT
+	item_code, 
+	--абсолютное значение количества внутриигровых продаж эпического предмета
+	count(*) AS number_game_items,
+	--относительное значение количества внутриигровых продаж эпического предмета
+	round(count(*)*1.0 / (SELECT count(*) FROM fantasy.events), 4) AS share_game_items,
+	--доля игроков, которые хотя бы раз покупали этот эпический предмет
+	round(count(DISTINCT id)*1.0 / (SELECT count(DISTINCT id) FROM fantasy.events), 4) AS share_payers
+	FROM fantasy.events
+	--только ненулевые
+	WHERE amount != '0'   
+	GROUP BY item_code
+)
+SELECT i.game_items, t1.number_game_items, t1.share_game_items, t1.share_payers
+FROM t1 AS t1
+--присоединение таблицы с названиями эпических предметов
+JOIN fantasy.items AS i USING (item_code)
+--сортировка по популярности эпического предмета среди игроков
+ORDER BY share_payers DESC;
+---------------------------+-----------------+----------------+------------+
+--game_items               |number_game_items|share_game_items|share_payers|
+---------------------------+-----------------+----------------+------------+
+--Book of Legends          |          1004516|          0.7682|      0.8841|
+--Bag of Holding           |           271875|          0.2079|      0.8677|
+--Necklace of Wisdom       |            13828|          0.0106|      0.1180|
+--Gems of Insight          |             3833|          0.0029|      0.0671|
+--Treasure Map             |             3084|          0.0024|      0.0546|
+--Silver Flask             |              795|          0.0006|      0.0459|
+--Amulet of Protection     |             1078|          0.0008|      0.0323|
+--Glowing Pendant          |              563|          0.0004|      0.0257|
+--Strength Elixir          |              580|          0.0004|      0.0240|
+--...................................... и т.д. ..........................--
+---------------------------+-----------------+----------------+------------+
+
+-- Часть 3. Решение ad hoc-задач
+-- Задача 1. Зависимость активности игроков от расы персонажа:
+WITH
+t1 AS (
+SELECT  race_id,
+		--общее количество зарегистрированных игроков по расам
+		count(payer) AS total_count_users,
+		--количество платящих игроков по расам
+		sum(payer) AS count_paying_users
+		FROM fantasy.users
+		GROUP BY race_id
+),
+t2 AS (
+SELECT
+		u.race_id,
+		--количество платящих игроков, которые совершили покупки 
+		count(DISTINCT e.id) AS count_users_pay_buy
+		FROM fantasy.events AS e 
+		LEFT JOIN fantasy.users AS u USING (id)
+		WHERE e.amount != '0' AND u.payer = '1'
+		GROUP BY race_id
+),
+t3 AS (
+SELECT
+		u.race_id,
+		--количество игроков, которые совершили покупки 
+		count(DISTINCT e.id) AS count_users_buy
+		FROM fantasy.events AS e 
+		LEFT JOIN fantasy.users AS u USING (id)
+		WHERE e.amount != '0'
+		GROUP BY race_id
+),
+t4 AS (
+		SELECT
+		u.race_id, id,
+		--количество покупок на одного игрока (среди покупателей)
+		count(e.transaction_id) AS count_transaction_users_buy,
+		--стоимость покупок на одного игрока (среди покупателей)
+		sum(e.amount) AS costs_users_buy
+		FROM fantasy.events AS e 
+		LEFT JOIN fantasy.users AS u USING (id)
+		WHERE e.amount != '0'
+		GROUP BY race_id, id
+),
+t5 AS (
+		SELECT
+		race_id,
+		--среднее количество покупок на одного игрока (среди покупателей)
+		avg(count_transaction_users_buy) AS avg_count_transaction,
+		--средняя стоимость одной покупки на одного игрока (среди покупателей)
+		avg(costs_users_buy / count_transaction_users_buy) AS avg_costs_1_transaction,
+		--средняя суммарная стоимость покупок на одного игрока (среди покупателей)
+		avg(costs_users_buy) AS avg_costs
+		FROM t4
+		GROUP BY race_id
+)
+SELECT 
+    --название расы
+	r.race,
+    --общее количество зарегистрированных игроков по расам
+	t1.total_count_users,
+    --количество игроков, которые совершают внутриигровые покупки
+	t3.count_users_buy,
+	--доля игроков, которые совершают внутриигровые покупки от общего количества игроков в расе
+	round(t3.count_users_buy * 1.0 / t1.total_count_users, 4) AS share_users_buy,
+	--доля платящих игроков от количества игроков, которые совершили покупки
+    round(t2.count_users_pay_buy * 1.0 / t3.count_users_buy, 4) AS share_users_pay,
+	--среднее количество покупок на одного игрока (среди покупателей)
+	round(t5.avg_count_transaction::numeric, 2) AS avg_count_transaction,
+	--средняя стоимость одной покупки на одного игрока (среди покупателей)
+	round(t5.avg_costs_1_transaction::numeric, 4) AS avg_costs_1_transaction, 
+    --средняя суммарная стоимость всех покупок на одного игрока (среди покупателей)
+	round(t5.avg_costs::numeric, 4) AS avg_costs
+FROM t1 AS t1
+JOIN t2 AS t2 USING (race_id)
+JOIN t3 AS t3 USING (race_id)
+JOIN t5 AS t5 USING (race_id)
+--название расы вместо rase_id
+JOIN fantasy.race AS r USING (race_id)
+ORDER BY avg_count_transaction DESC 
+;
+----------+-----------------+---------------+---------------+---------------+---------------------+-----------------------+----------+
+--race    |total_count_users|count_users_buy|share_users_buy|share_users_pay|avg_count_transaction|avg_costs_1_transaction|avg_costs |
+----------+-----------------+---------------+---------------+---------------+---------------------+-----------------------+----------+
+--Human   |             6328|           3921|         0.6196|         0.1801|               121.40|               733.6180|48941.0099|
+--Angel   |             1327|            820|         0.6179|         0.1671|               106.80|               775.5474|48668.6537|
+--Hobbit  |             3648|           2266|         0.6212|         0.1770|                86.13|               699.8951|47620.9231|
+--Northman|             3562|           2229|         0.6258|         0.1821|                82.10|               781.0536|62520.6593|
+--Orc     |             3619|           2276|         0.6289|         0.1740|                81.74|               709.4439|41760.0406|
+--Elf     |             2501|           1543|         0.6170|         0.1627|                78.79|               791.8378|53761.6536|
+--Demon   |             1229|            737|         0.5997|         0.1995|                77.87|               735.4794|41197.3796|
+----------+-----------------+---------------+---------------+---------------+---------------------+-----------------------+----------+

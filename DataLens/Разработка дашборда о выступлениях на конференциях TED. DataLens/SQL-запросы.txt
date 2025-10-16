@@ -1,0 +1,63 @@
+**ТОП-10 спикеров по количеству оваций**
+
+with t4 as (
+    select * , COALESCE(applause_count, 0) as applause_count_2
+    from ted.talks as t1
+    LEFT JOIN ted.speakers as t2 on t1.speaker_id = t2.author_id
+    left join ted.events as t3 on t1.event_id = t3.conf_id
+    )
+select speaker_name as Спикер,
+    speaker_occupation as Сфера,
+    speaker_description as Информация,
+    sum(applause_count_2) as Овации
+from t4
+where  (main_tag in {{topic_tag}}) and
+    (date(film_date) BETWEEN {{date_film_from}} AND {{date_film_to}}) and
+    country in {{region_par}} and
+    event_name in {{event_name_par}}
+group by 1, 2, 3
+order by sum(applause_count_2) desc
+limit 10;
+
+
+
+
+**ТОП-10 выступлений по количеству оваций**
+
+select b1.title, sum(b1.applause_count)
+from ted.talks as b1
+left join ted.events as b2 on b1.event_id = b2.conf_id
+where applause_count is not null
+    and (date(b1.film_date) BETWEEN {{date_film_from}} AND {{date_film_to}})
+    and b1.main_tag in {{topic_tag}}
+    and b2.country in {{region_par}}
+group by b1.title
+order BY sum(b1.applause_count) desc
+limit 10;
+
+
+
+**ТОП-10 самых смешных выступлений**
+
+select b1.title, sum(b1.laughter_count)
+from ted.talks as b1
+left join ted.events as b2 on b1.event_id = b2.conf_id
+where laughter_count is not null
+    and (date(b1.film_date) BETWEEN {{date_film_from}} AND {{date_film_to}})
+    and b1.main_tag in {{topic_tag}}
+    and b2.country in {{region_par}}
+group by b1.title
+order BY sum(b1.laughter_count) desc
+limit 10;
+
+
+
+**ТОП-10 самых популярных тем**
+
+select a1.main_tag, count(a1.main_tag)
+from ted.talks as a1 
+left join ted.events as a2 on a1.event_id = a2.conf_id
+where date(a1.film_date) BETWEEN {{date_film_from}} AND {{date_film_to}} and a2.country in {{region_par}} 
+group by a1.main_tag
+order BY count(a1.main_tag) desc
+limit 10;
