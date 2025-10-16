@@ -1,0 +1,233 @@
+Расчет ключевых метрик активности пользователей сервиса электронных книг.
+
+Цель — глубже понять поведение пользователей и найти примечательные закономерности.
+Эти расчёты помогут понять, как пользователи взаимодействуют с платформой, какие виды контента
+наиболее популярны, а также выявить особенности поведения пользователей.
+
+
+1.
+Расчёт MAU авторов, то есть количество уникальных пользователей в месяц, которые
+читали или слушали конкретного автора.
+
+Выведем имена топ-3 авторов с наибольшим MAU в ноябре и сами значения MAU.
+Результат отсортируем по значению MAU в порядке убывания.
+
+
+with
+novembre as (
+    select puid, main_content_id, msk_business_dt_str
+    from bookmate.audition
+    where extract(month from cast(msk_business_dt_str as timestamp)) = 11
+)
+
+select au.main_author_name, 
+    count(distinct n.puid) as mau
+from novembre as n
+left join bookmate.content as c on n.main_content_id = c.main_content_id 
+left join bookmate.author as au  on c.main_author_id = au.main_author_id
+group by 1
+order by 2 desc
+limit 3
+
+
+Результат
+
+main_author_name	mau
+Андрей Усачёв	7107
+Лиана Шнайдер	3338
+Игорь Носов	3063
+
+
+-------------------------------------------------------------------------------------------------------
+
+
+2.
+Расчёт MAU произведений.
+
+Выводим названия топ-3 произведений с наибольшим MAU в ноябре, а также списки жанров этих произведений,
+их авторов и сами значения MAU.
+Результат отсортируем по значению MAU в порядке убывания.
+
+
+with
+novembre as (
+    select puid,
+    main_content_id,
+    msk_business_dt_str
+    from bookmate.audition
+    where extract(month from cast(msk_business_dt_str as timestamp)) = 11
+)
+
+select c.main_content_name,
+    c.published_topic_title_list,
+    au.main_author_name, 
+    count(distinct n.puid) as mau
+from novembre as n
+left join bookmate.content as c on n.main_content_id = c.main_content_id 
+left join bookmate.author as au  on c.main_author_id = au.main_author_id
+group by 1, 2, 3
+order by 4 desc
+limit 3
+
+
+Результат
+main_content_name	published_topic_title_list	main_author_name	mau
+Собачка Соня на даче	['Детская проза и поэзия', 'Аудио']	Андрей Усачёв	4597
+Женькин клад и другие школьные рассказы	['Сказки и фольклор', 'Детская проза и поэзия', 'Аудио']	Игорь Носов	3050
+Знаменитая собачка Соня	['Аудиоспектакли', 'Детская проза и поэзия', 'Аудио']	Андрей Усачёв	2785
+
+--------------------------------------------------------------------------
+
+
+3.
+Расчёт Retention Rate
+2 декабря проведена рекламная кампания, которая привлекла множество пользователей.
+Проанализируем ежедневный Retention Rate всех пользователей(и новых и старых), которые были активны 2 декабря.
+
+Рассчитайте ежедневный Retention Rate пользователей до конца представленных данных.
+Выведите следующие поля:
+day_since_install — срок жизни пользователя в днях;
+retained_users — количество пользователей, которые вернулись в приложение в конкретный день;
+retention_rate — коэффициент удержания для вернувшихся пользователей по отношению к общему числу пользователей,
+которые установили приложение.Округлите до двух знаков после запятой.
+Результат отсортировать по сроку жизни в порядке возрастания.
+
+with
+-- получим id пользователей в первый день рекламной кампании 2 декабря
+users as (
+select distinct puid
+from bookmate.audition
+where extract( month from cast(msk_business_dt_str as timestamp)) = 12 and
+    extract( day from cast(msk_business_dt_str as timestamp)) = 2
+),
+
+-- получаем активности только за период с 2 по 11 декабря
+activity as (
+select *
+from bookmate.audition
+where extract( month from cast(msk_business_dt_str as timestamp)) = 12 and
+    extract( day from cast(msk_business_dt_str as timestamp)) >= 2
+),
+
+-- получаем все активности выбранных пользователей 
+users_activity as (
+select u.puid as puid,
+    a.msk_business_dt_str as msk_business_dt_str
+from users as u
+left join activity as a on u.puid=a.puid
+order by msk_business_dt_str
+) ,
+
+--считаем активных пользователей за каждый день и меняем дату на номер дня
+count_user_activity as (
+select msk_business_dt_str - min(msk_business_dt_str) over()  as day_since_install,
+    count (distinct puid) as retained_users
+from users_activity
+group by msk_business_dt_str
+)
+
+select day_since_install, retained_users, 
+   round(retained_users * 1.0 /  max(retained_users) over (), 2) as retention_rate
+from count_user_activity
+Результат
+day_since_install	retained_users	retention_rate
+0	4259	1
+1	2698	0.63
+2	2550	0.6
+3	2421	0.57
+4	2231	0.52
+5	1994	0.47
+6	2129	0.5
+7	2287	0.54
+8	2274	0.53
+9	2207	0.52
+
+
+---------------------------------------------------------------------------------
+
+4.
+Расчёт LTV
+Подписка сервиса стоит 399 рублей в месяц. Рассчитаем средние LTV для пользователей в Москве 
+и Санкт-Петербурге и сравним их между собой.
+
+Будем использовать формулу LTV: общий доход / количество пользователей.
+Получим общее количество пользователей в каждом городе и их средний LTV.
+
+with
+-- Для каждого пользователя и даты события получаем местоположение
+users_geo as (
+    select a.puid as puid,
+        a.msk_business_dt_str,
+        g.usage_geo_id_name as city
+    from bookmate.audition as a
+    left join bookmate.geo as g using (usage_geo_id)
+    where g.usage_geo_id_name in ('Москва', 'Санкт-Петербург')
+),
+-- Для каждого пользователя и города получаем количество месяцев использования сервиса
+users as (
+    select puid, city,
+        count(distinct extract(month from cast(msk_business_dt_str as timestamp))) as count_month_pay
+    from users_geo
+    group by puid, city
+)
+-- Для каждого города получаем количество пользователей и средний ltv
+select city,
+    count(puid) as total_users,
+    round(sum(count_month_pay) * 399 / count(puid), 2) as ltv
+from users
+group by city
+
+
+Результат
+city	total_users	ltv
+Москва	16808	764.55
+Санкт-Петербург	12559	731.82
+
+
+----------------------------------------------------------------------------------------------
+
+5.
+Расчёт средней выручки с прослушанного часа (аналог среднего чека)
+Ежемесячную среднюю выручку от часа чтения или прослушивания рассчитываем по формуле:
+выручка (MAU * 399 рублей) / сумма прослушанных часов.
+
+Получим месяц активности, MAU, общее количество прослушанных часов, среднюю выручку от часа
+чтения или прослушивания за сентябрь, октябрь и ноябрь
+
+select date(date_trunc('month', cast(msk_business_dt_str as date))) as month,
+    count(distinct puid) as mau,
+    round(sum(hours), 2) as hours,
+    round(count(distinct puid) * 399 / sum(hours), 2) as avg_hour_rev
+from bookmate.audition
+where extract(month from cast(msk_business_dt_str as timestamp)) in (9, 10, 11)
+group by 1
+
+Результат
+month	mau	hours	avg_hour_rev
+2024-09-01	16320	105539	61.7
+2024-10-01	18280	137384	53.09
+2024-11-01	18594	145351	51.04
+
+
+---------------------------------------------------------------------------------------
+
+6. Подготовка данных для работы в Python.
+Отберём пользователей только из Москвы и Санкт-Петербурга и выведем их активность (общее
+количество часов использования сервиса)
+
+
+select g.usage_geo_id_name as city,
+    a.puid, 
+    sum(hours) as hours
+from bookmate.audition as a 
+left join bookmate.geo as g using (usage_geo_id)
+where usage_geo_id_name in ('Москва', 'Санкт-Петербург')
+group by 1, 2
+
+
+Результат
+city	puid	hours
+Москва	68296628-f9d6-11ef-be00-c2c9fa6fd3d5	0.874722
+Москва	682966dc-f9d6-11ef-be00-c2c9fa6fd3d5	3.38583
+Москва	68296740-f9d6-11ef-be00-c2c9fa6fd3d5	6.96316
+Москва	6829675e-f9d6-11ef-be00-c2c9fa6fd3d5	26.6028
