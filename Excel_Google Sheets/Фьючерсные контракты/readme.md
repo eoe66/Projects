@@ -13,7 +13,7 @@
 * Оповещение о потенциальных арбитражных возможностях
 
 ## Инструменты:
-Google Sheets
+`Google Sheets`
 
-## Ссылка:
-[открыть google-документ](https://docs.google.com/spreadsheets/d/1htlROkbslIeRVMx2-K696nQLxIBlD1vG6-ygZ_WgwO8/edit?usp=sharing)
+
+**Ссылка:** [открыть google-документ](https://docs.google.com/spreadsheets/d/1htlROkbslIeRVMx2-K696nQLxIBlD1vG6-ygZ_WgwO8/edit?usp=sharing)
