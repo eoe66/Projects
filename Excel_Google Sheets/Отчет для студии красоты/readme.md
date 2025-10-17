@@ -15,5 +15,6 @@
 * прозрачность финансового состояния бизнеса и контроль над статьями расходов
 
 ## Инструменты:
-`Google Sheets`
+`Google Sheets`  
+
 **Ссылка:** [google-документ](https://docs.google.com/spreadsheets/d/1kkKLqIO4mEiM8T6WTZ-Fkc5ksNmO6Pr_uyy9f6vjUyc/edit?usp=drive_link)
