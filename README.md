@@ -55,7 +55,9 @@
 Стек: `PostgreSQL`    
 [Ссылка на проект](https://github.com/eoe66/Projects/tree/5acffbcd56acc1ead9af3ba1a5b542f7dadd367e/PostgreSQL/%D0%90%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%B0%20%D0%BF%D0%BE%20%D0%BF%D0%BE%D0%B8%D1%81%D0%BA%D1%83%20%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%8B)  
 
-
+* **Разработка дашборда для благотворительного фонда.**  Глубокий анализа базы благотворителей: удержание, LTV, портреты доноров.  
+Стек: `DataLens`, `PostgreSQL`     
+[Ссылка на проект](https://github.com/eoe66/Projects/tree/d03a91436835f0ed5ab0f9b0c44f82d697429fc4/DataLens/%D0%A0%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B0%20%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4%D0%B0%20%D0%B4%D0%BB%D1%8F%20%D0%B1%D0%BB%D0%B0%D0%B3%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE%D0%B3%D0%BE%20%D1%84%D0%BE%D0%BD%D0%B4%D0%B0.%20DataLens)  
 </details>
 
 ##
@@ -85,10 +87,6 @@
 * **Разработка дашборда для агентства недвижимости.**  Анализ рынка недвижимости: динамика предложения, цен и скорости продаж.  Сезонность активности и рейтинги городов по ключевым параметрам.  
 Стек: `DataLens`, `PostgreSQL`  
 [Ссылка на проект](https://github.com/eoe66/Projects/tree/d03a91436835f0ed5ab0f9b0c44f82d697429fc4/DataLens/%D0%90%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D1%80%D1%8B%D0%BD%D0%BA%D0%B0%20%D0%BD%D0%B5%D0%B4%D0%B2%D0%B8%D0%B6%D0%B8%D0%BC%D0%BE%D1%81%D1%82%D0%B8%20%D0%B4%D0%BB%D1%8F%20%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D1%81%D1%82%D0%B2%D0%B0%20%D0%BD%D0%B5%D0%B4%D0%B2%D0%B8%D0%B6%D0%B8%D0%BC%D0%BE%D1%81%D1%82%D0%B8.%20SQL.%20DataLens)  
-
-* **Разработка дашборда для благотворительного фонда.**  Глубокий анализа базы благотворителей: удержание, LTV, портреты доноров.  
-Стек: `DataLens`, `PostgreSQL`     
-[Ссылка на проект](https://github.com/eoe66/Projects/tree/d03a91436835f0ed5ab0f9b0c44f82d697429fc4/DataLens/%D0%A0%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B0%20%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4%D0%B0%20%D0%B4%D0%BB%D1%8F%20%D0%B1%D0%BB%D0%B0%D0%B3%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE%D0%B3%D0%BE%20%D1%84%D0%BE%D0%BD%D0%B4%D0%B0.%20DataLens)  
 
 * **Разработка дашборда о выступлениях на конференциях**  Многогранный анализ базы выступлений TED для выявления наиболее популярных тем, трендов и факторов успеха лекций. 
 Стек: `DataLens`, `PostgreSQL`    
