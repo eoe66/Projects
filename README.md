@@ -1,5 +1,7 @@
 # Projects
 
+<img src="https://github.com/eoe66/eoe66eoe/blob/main/icons/lets-go.gif" title="Проекты" alt="Проекты" width="40" height="40"/>  
+
 ### Коммерческие и личные проекты:
 <details>
 <summary>посмотреть</summary>
@@ -30,9 +32,12 @@
 [Ссылка на проект](https://github.com/eoe66/Projects/tree/9d7dd198ee3c30f6f270662dfb5cfb471dfcfcd1/Excel_Google%20Sheets/%D0%A4%D1%8C%D1%8E%D1%87%D0%B5%D1%80%D1%81%D0%BD%D1%8B%D0%B5%20%D0%BA%D0%BE%D0%BD%D1%82%D1%80%D0%B0%D0%BA%D1%82%D1%8B)
 </details>
 
+##
 
+<img src="https://github.com/eoe66/eoe66eoe/blob/main/icons/two.gif" title="Проекты" alt="Проекты" width="40" height="40"/>  
 
 ### Pet-проекты:
+
 <details>
 <summary>посмотреть</summary>
 <br>
@@ -53,7 +58,9 @@
 
 </details>
 
+##
 
+<img src="https://github.com/eoe66/eoe66eoe/blob/main/icons/three.gif" title="Проекты" alt="Проекты" width="40" height="40"/>  
 
 ### Учебные проекты на основе реальных данных:
 
