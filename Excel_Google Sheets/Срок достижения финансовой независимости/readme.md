@@ -12,3 +12,5 @@
 
 ## Инструменты:  
 `Google Sheets`
+
+**Ссылка:** [google-документ](https://docs.google.com/spreadsheets/d/1P-1ih0g5_4wurT51Res4PEAj0iqJnuZoOIuhgjhkHPI/edit?usp=drive_link)
