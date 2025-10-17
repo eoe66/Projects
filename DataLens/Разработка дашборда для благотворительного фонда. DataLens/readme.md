@@ -19,3 +19,6 @@
 
 ## Инструменты:
 DataLens, SQL
+
+## Ссылка на дашборд:
+[смотреть](https://datalens.yandex/jjor689sjysy5?_lang=ru&_theme=dark)
