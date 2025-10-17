@@ -14,3 +14,5 @@
 
 ## Инструменты:
 Google Sheets
+
+## Ссылка на google-документ: https://clck.ru/3Pnhhf
