@@ -15,4 +15,5 @@
 ## Инструменты:
 Google Sheets
 
-## Ссылка на google-документ: https://clck.ru/3Pnhhf
+## Ссылка:
+[открыть google-документ](https://docs.google.com/spreadsheets/d/1htlROkbslIeRVMx2-K696nQLxIBlD1vG6-ygZ_WgwO8/edit?usp=sharing)
