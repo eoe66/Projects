@@ -16,4 +16,4 @@
 ## Инструменты:
 `Google Таблицы` (QUERY, IMPORTRANGE, ARRAYFORMULA).
 
-(Ссылка на документ)[https://docs.google.com/spreadsheets/d/1KJw127AyJQXOpdsd13uHQIJYo8yHnaesOJ0S1tFvRIM/edit?usp=sharing]
+Ссылка на файл [смотреть](https://docs.google.com/spreadsheets/d/1KJw127AyJQXOpdsd13uHQIJYo8yHnaesOJ0S1tFvRIM/edit?usp=sharing)
