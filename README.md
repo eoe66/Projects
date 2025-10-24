@@ -8,7 +8,7 @@
 <br>
   
 * <img src="https://github.com/eoe66/eoe66eoe/blob/bb1cfa7624e14f2344de80794f013e01d34567f4/icons/new.png" title="New" alt="New" width="20" height="20"/> **ABC-XYZ анализ для сети кофеен.** Сбор данных, анализ и визуализация показателей эффективности и ABC-XYZ матриц для филиалов.   
-Стек: ``Google Таблицы`  
+Стек: `Google Таблицы`  
 [Ссылка на проект](https://github.com/eoe66/Projects/tree/cceb874f000b032cf7f4aac1f8976ebd2c29cda8/Excel_Google%20Sheets/%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%BD%D1%8B%D0%B9%20%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4%20ABC-XYZ%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%D0%B0%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B5%D1%82%D0%B8%20%D0%BA%D0%BE%D1%84%D0%B5%D0%B5%D0%BD) 
 
 
