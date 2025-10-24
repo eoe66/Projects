@@ -15,3 +15,5 @@
 
 ## Инструменты:
 `Google Sheets`
+
+Ссылка на документ [смотреть](https://docs.google.com/spreadsheets/d/18CfSXIGsp6DufhAraOboody2TZLh3Z30D6rr9O4DvNU/edit?usp=drive_link)
