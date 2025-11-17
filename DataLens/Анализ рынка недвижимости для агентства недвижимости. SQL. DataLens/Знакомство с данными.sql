@@ -1,21 +1,16 @@
 --====================================================================================================================================================================================
---Знакомство с данными таблицы advertisement
-/* Выводы: всего 23650 объявлений;
-		   дата начала размещения 2014-11-27, дата  размещения последнего объявления 2019-05-03;
-		   всего 1618 дней = 4 years 5 mons 6 days;
-		   есть пропуски в поле days_exposition, значит объект не продан, их количество 3180 объявлений ( т.е. 13,45% от всех объявлений);
-		   минимальная длительность размещения объявления 1 день, максимальная 1580 (для проданных объектов);
-           большая часть не проданных объявлений приходится на 2019 г, т.е. "свежие" объявления - 1796 шт., меньше всего на 2014 года - 18 шт.;
-           минимальная стоимость квартиры 12.190 руб, максимальная 763.000.000 руб      
+-- 1. Знакомство с данными таблицы advertisement
+
+/* Таблица advertisement (объявления):
+	id                    номер объявления,
+	first_day_exposition  первый день размещения
+	days_exposition       дней размещения объявления
+	last_price            последняя цена продажи
 */
 --====================================================================================================================================================================================
-/*Таблица advertisement (объявления):
- * id                    номер объявления,
- * first_day_exposition  первый день размещения
- * days_exposition       дней размещения объявления
- * last_price            последняя цена продажи*/
 
-/*Первые 10 строк таблицы*/
+-- 1.1 Первые 10 строк таблицы
+
 select *
 from real_estate.advertisement
 limit 10;
@@ -35,8 +30,9 @@ limit 10;
 ----+--------------------+---------------+----------+
 
 
-/*Количество непроданных квартир (разбивка по годам; пропуски в поле days_exposition), общее количество и доля  */
-select  count(*) filter( where days_exposition is null and date_part('year', first_day_exposition) = '2014' )  as count_2014,
+-- 1.2 Количество непроданных квартир (разбивка по годам; пропуски в поле days_exposition), общее количество и доля
+
+select  count(*) filter( where days_exposition is null and date_part('year', first_day_exposition) = '2014' )          as count_2014,
 		count(*) filter( where days_exposition is null and date_part('year', first_day_exposition) = '2015' )  as count_2015,
 		count(*) filter( where days_exposition is null and  date_part('year', first_day_exposition) = '2016' ) as count_2016,
 		count(*) filter( where days_exposition is null and date_part('year', first_day_exposition) = '2017' )  as count_2017,
@@ -55,8 +51,9 @@ from real_estate.advertisement
 ------------+----------+----------+----------+----------+----------+-----------+-----------------+--------------+
 
 
-/*Описательная статистика*/
-select  count(*)                                                                                                as count_advertisement,
+--1.3 Описательная статистика
+
+select  count(*)                                                                                                        as count_advertisement,
 		min(first_day_exposition)                                                                               as min_first_day_exposition,
 		max(first_day_exposition)                                                                               as max_first_day_exposition,
 		max(first_day_exposition) - min(first_day_exposition)                                                   as day_exposition,
@@ -92,10 +89,15 @@ from real_estate.advertisement
 ----------------+--------------+-----------------+---------------+------------------+
 
 
-/*Самый длинный срок продажи недвижимости в годах, месяцах и днях*/
-select  city, type, first_day_exposition, days_exposition, age(first_day_exposition + days_exposition::integer, first_day_exposition)
+--1.4 Самый длинный срок продажи недвижимости в годах, месяцах и днях
+
+select  city,
+	type,
+	first_day_exposition,	
+	days_exposition,
+	age(first_day_exposition + days_exposition::integer, first_day_exposition)
 from real_estate.advertisement
-join real_estate.flats    as f using(id)
+join real_estate.flats         as f using(id)
 join real_estate.city          as c using(city_id)
 join real_estate.type          as t using(type_id)
 where days_exposition is not null and type = 'город'
@@ -115,10 +117,15 @@ limit 1
 --Санкт-Петербург|город|          2014-12-09|         1572.0|4 years 3 mons 21 days|
 -----------------+-----+--------------------+---------------+----------------------+
 
-/*Самый короткий срок продажи недвижимости в годах, месяцах и днях*/
-select  city, type, first_day_exposition, days_exposition, age(first_day_exposition + days_exposition::integer, first_day_exposition)
+--1.5 Самый короткий срок продажи недвижимости в годах, месяцах и днях
+
+select  city,
+	type,
+	first_day_exposition,
+	days_exposition,	
+	age(first_day_exposition + days_exposition::integer, first_day_exposition)
 from real_estate.advertisement
-join real_estate.flats    as f using(id)
+join real_estate.flats         as f using(id)
 join real_estate.city          as c using(city_id)
 join real_estate.type          as t using(type_id)
 where days_exposition is not null and type = 'город'
@@ -131,17 +138,28 @@ limit 1
 --Санкт-Петербург|город|          2019-05-01|            1.0|1 day|
 -----------------+-----+--------------------+---------------+-----+
 
-
-
---====================================================================================================================================================================================
---Знакомство с данными таблицы city 
---====================================================================================================================================================================================
-/*Таблица city (города):
- * city_id      идентификатор города
- * city         город
+/* Выводы:
+	всего 23650 объявлений;
+	дата начала размещения 2014-11-27;
+	дата  размещения последнего объявления 2019-05-03;
+	всего 1618 дней = 4 years 5 mons 6 days;
+	есть пропуски в поле days_exposition, значит объект не продан, их количество 3180 объявлений ( т.е. 13,45% от всех объявлений);
+	минимальная длительность размещения объявления 1 день, максимальная 1580 (для проданных объектов);
+        большая часть не проданных объявлений приходится на 2019 г, т.е. "свежие" объявления - 1796 шт., меньше всего на 2014 года - 18 шт.;
+        минимальная стоимость квартиры 12.190 руб, максимальная 763.000.000 руб      
 */
 
-/*Первые 5 строк таблицы и общее количество населенных пунктов*/
+--====================================================================================================================================================================================
+--2. Знакомство с данными таблицы city 
+
+/*Таблица city (города):
+	city_id      идентификатор города
+	city         город
+*/
+--====================================================================================================================================================================================
+
+--2.1 Первые 5 строк таблицы и общее количество населенных пунктов
+
 select *,
 	count(*) over() as total_count_city
 from real_estate.city
@@ -159,14 +177,15 @@ limit 5;
 
 
 --====================================================================================================================================================================================
---Знакомство с данными таблицы type 
---====================================================================================================================================================================================
+--3. Знакомство с данными таблицы type 
 /*Таблица type (тип):
- * type_id      идентификатор типа
- * type         тип
+	type_id      идентификатор типа
+	type         тип
 */
+--====================================================================================================================================================================================
 
-/*Первые 5 строк таблицы и количество типов*/
+--3.1 Первые 5 строк таблицы и количество типов
+
 select *,
 	count(*) over() as total_count_type
 from real_estate.type
@@ -184,65 +203,30 @@ limit 5;
 
 
 --====================================================================================================================================================================================
---Знакомство с данными таблицы flats 
---
-/*Выводы по результатам:
- *	В таблице flats 23650 строк
- *	В таблице flats есть 16 объектов недвижимости с одинаковыми характеристиками (разные id), однако у них различные даты публикации, сроки активности и стоимости.
- *	Поле total_area: нет пропусков и нулевых значений; минимальное значение 12, максимальное 900; среднее (60,33) значительны выше медианы (52,0),
- *					 необходимо ограничить выборку сверху - 99 перцентиль равен 197,9	
- *  Поле rooms: нет пропусков, есть 197 нулевых знаений; минимальное значение (без 0) 1, максимальное 19 - многовато; среднее (2,07) очень близко к медиане (2,0); есть аномально высокие и низкие
- * 				значения; необходимо ограничить выборку сверху -  99 перцентиль равен 5,0	 
- *  Поле ceiling_height: есть 9160 пропусков, нет нулевых значений; минимальное значение 1, максимальное 100; среднее (2,77) несколько выше чем медиана (2,65); есть аномально высокие 
- *                       и низкие значения; необходимо ограничить выборку снизу - 01 перцентиль равен 2,5 и сверху -  99 перцентиль равен 3,82.
- * 						 У 145 объектов аномально высокие значения высоты потолка, а у 73 - аномально низкие. У некоторых объектов вероятно ошибка в разрядах, например указано 27м,
- *                       вероятно должно быть 2,7м. Перед фильтрацией можно откорректировать значения,чтобы сохранить больше объектов в выборке.
- *  Поле floors_total: есть 86 пропусков, нет нулевых значений; минимальное значение 1, максимальное 60; среднее (10,68) сильно выше медианы (2,0);
- * 				       99 перцентиль равен 26.
- *  Поле living_area:  есть 1898 пропусков, нет нулевых значений; минимальное значение 2, максимальное 409,7; среднее (34,45) несколько выше медианы (30,0); 01 перцентиль равен 13,0;
- * 					    99 перцентиль равен 120,0; 
- *  Поле floor:        нет пропусков и нулевых значений; минимальное значение 1, максимальное 33;  среднее (5,89) немного выше медианы (4,0); 99 перцентиль равен 23,0	
- *  Поле is_apartment: пропусков нет; доля апартаментов от всех объектов составляет 0,21%
- *  ! Поле balcony:    нет пропусков, 3725 нулевых значений; минимальное значение 0, максимальное 5 - слишком много; среднее (1,15) незначительно выше медианы (1,0);
- *  Поле kitchen_area: есть 2269 пропусков, нет нулевых значений; минимальное значение 1,3, максимальное 112; среднее (10.57) несколько выше медианы (9,1); 
- *  Поле living_area:  есть 1898 пропусков, нет нулевых значений; минимальное значение 2, максимальное 409,7; среднее (34,45) несколько выше медианы (30,0); есть аномально высокие и низкие
- * 				       значения; 01 перцентиль равен 13,0 ; 99 перцентиль равен 120,0;
- *  Поле open_plan: пропусков нет; доля студий от всех объектов составляет 0,28%; у 5 студий указано количество комнат более 1 - вероятно это зоны, а 59 указано количество комнат 0 - странно
- *  Поле airports_nearest: пропусков нет, одно нулевой значение; минимальное значение 6450 (без учета нулевого), максимальное 84869; среднее (28803,23), очень большой разброс данных (78419),
- *                         медиана ниже среднего (28803,23); 99 перцентиль равен 58514,75;  
- *  Поле parks_around3000: 5510 пропусков, 10080 нулей и 8060 ненулевых значений; минимальное значение 1 (без учета нулей), максимальное 3; парк или есть или его нет, поэтому пропуски необходимо
- *                         заменить нулевыми значениями
- *  Поле ponds_around3000: 5510 пропусков, 9055 нулей и 9085 ненулевых значений; минимальное значение 1 (без учета нулей), максимальное 3; водоем или есть или его нет, поэтому пропуски необходимо
- *                         заменить нулевыми значениями
- * 
- *  Стоимость квартиры:  минимальное значение 12.190 (вероятно оно указано в тысячах), максимальное значение 763.000.000; среднее 6.541.126,90 значительно выше медианы 4.650.000,0;
- *                       есть аномально высокие и низкие значения; необходимо внести корректировку минимального значения и ограничить выборку снизу и сверху.
- *  Средняя цена за квадратный метр: минимальное значение 111,83, максимальное значение 1.907.500; среднее 99.432,25 несколько выше медианы 95.000,0;
- *                                   есть аномально высокие и низкие значения; необходимо внести корректировку минимального значения
- */
+--4. Знакомство с данными таблицы flats 
+/*
+Таблица flats (квартиры):
+	id                  идентификатор объявления
+	city_id             идентификатор города
+	type_id             идентификатор типа
+	total_area          общая площадь
+	rooms               количество комнат
+	ceiling_height      высота потолка
+	floors_total        всего этажей
+	living_area         жилая площадь
+	floor               этаж расположения квартиры
+	is_apartment        апартаменты
+	open_plan           открытая планировка
+	kitchen_area        площадь кухни
+	balcony             количество балконов
+	airports_nearest    расстояние до ближайшего аэропорта
+	parks_around3000    количество парков вблизи 3000м
+	ponds_around3000    количество водоемов вблизи 3000м
+*/
 --====================================================================================================================================================================================
 
-/*
- * Таблица flats (квартиры):
- * id                  идентификатор объявления
- * city_id             идентификатор города
- * type_id             идентификатор типа
- * total_area          общая площадь
- * rooms               количество комнат
- * ceiling_height      высота потолка
- * floors_total        всего этажей
- * living_area         жилая площадь
- * floor               этаж расположения квартиры
- * is_apartment        апартаменты
- * open_plan           открытая планировка
- * kitchen_area        площадь кухни
- * balcony             количество балконов
- * airports_nearest    расстояние до ближайшего аэропорта
- * parks_around3000    количество парков вблизи 3000м
- * ponds_around3000    количество водоемов вблизи 3000м
-*/
+--4.1 Количество строк в таблице
 
-/*Количество строк в таблице*/
 select count(*)
 from real_estate.flats;
 -------+
@@ -252,36 +236,82 @@ from real_estate.flats;
 -------+
 
 
-/*Проверка на наличие неявных дубликатов: количество дубликатов по всем полям кроме id найдено 16 штук*/
+--4.2 Проверка на наличие неявных дубликатов: количество дубликатов по всем полям кроме id найдено 16 штук
+
 with
 t1 as (
-	select  count(*) as count_flats, city_id, type_id, total_area, rooms, ceiling_height, floors_total, living_area, floor, is_apartment, open_plan,
-			kitchen_area, balcony, airports_nearest, parks_around3000, ponds_around3000
+	select  count(*) as count_flats,
+		city_id,
+		type_id,
+		total_area,
+		rooms,
+		ceiling_height,
+		floors_total,
+		living_area,
+		floor,
+		is_apartment,
+		open_plan,
+		kitchen_area,
+		balcony,
+		airports_nearest,
+		parks_around3000,
+		ponds_around3000
 	from real_estate.flats
-	group by    city_id, type_id, total_area, rooms, ceiling_height, floors_total, living_area, floor, is_apartment, open_plan,
-				kitchen_area, balcony, airports_nearest, parks_around3000, ponds_around3000
+	group by
+		city_id,
+		type_id,
+		total_area,
+		rooms,
+		ceiling_height,
+		floors_total,
+		living_area,
+		floor,
+		is_apartment,
+		open_plan,
+		kitchen_area,
+		balcony,
+		airports_nearest,
+		parks_around3000,
+		ponds_around3000
 	having count(*) > 1
 )
-select count(*)  from t1;
+select count(*)
+from t1;
 -------+
 --count|
 -------+
 --   16|
 -------+
 
-/*Проверка на наличие неявных дубликатов после объедиения двух таблиц flats и advertisement: количество дубликатов по всем полям (в том числе по дате публикации,
- *  периоду публикации и стоимости) кроме id*/
+--4.3 Проверка на наличие неявных дубликатов после объедиения двух таблиц flats и advertisement:
+--	количество дубликатов по всем полям (в том числе по дате публикации, периоду публикации и стоимости) кроме id
+
 with
 t1 as (
-	select  count(*) as count_flats, city_id, type_id, total_area, rooms, ceiling_height, floors_total, living_area, floor, is_apartment, open_plan,
-			kitchen_area, balcony, airports_nearest, parks_around3000, ponds_around3000, /*a.first_day_exposition, a.days_exposition ,*/ a.last_price
+	select  count(*) as count_flats,
+		city_id,
+		type_id,
+		total_area,
+		rooms,
+		ceiling_height,
+		floors_total,
+		living_area,
+		floor,
+		is_apartment,
+		open_plan,
+		kitchen_area,
+		balcony,
+		airports_nearest,
+		parks_around3000,
+		ponds_around3000, /*a.first_day_exposition, a.days_exposition ,*/ a.last_price
 	from real_estate.flats
 	join real_estate.advertisement as a using(id)
-	group by    city_id, type_id, total_area, rooms, ceiling_height, floors_total, living_area, floor, is_apartment, open_plan,
-				kitchen_area, balcony, airports_nearest, parks_around3000, ponds_around3000, a.first_day_exposition, a.days_exposition, a.last_price
+	group by
+		city_id, type_id, total_area, rooms, ceiling_height, floors_total, living_area, floor, is_apartment, open_plan,
+		kitchen_area, balcony, airports_nearest, parks_around3000, ponds_around3000, a.first_day_exposition, a.days_exposition, a.last_price
 	having count(*) > 1
 )
-select count(*)  from t1;
+select count(*) from t1;
 -------+
 --count|
 -------+
@@ -289,10 +319,11 @@ select count(*)  from t1;
 -------+
 
 
-/*Первые 10 строк таблицы*/
+--4.4 Первые 5 строк таблицы
+
 select *
 from real_estate.flats
-limit 10;
+limit 5;
 -- 
 ----+-------+-------+----------+-----+--------------+------------+-----------+-----+------------+---------+------------+-------+----------------+----------------+----------------+
 --id|city_id|type_id|total_area|rooms|ceiling_height|floors_total|living_area|floor|is_apartment|open_plan|kitchen_area|balcony|airports_nearest|parks_around3000|ponds_around3000|
@@ -306,18 +337,19 @@ limit 10;
 
 
 
-/***   Статистика по полю total_area   ***/
+--4.5 Статистика по полю total_area
+
 select  count(*) filter (where total_area is null)               as total_area_is_null,
-		count(*) filter (where total_area = 0)                   as total_area_zero,
+	count(*) filter (where total_area = 0)                   as total_area_zero,
         min(total_area) filter (where total_area != 0)           as min_total_area,
-		max(total_area)                                          as max_total_area,
-		round(avg(total_area)::numeric, 2)                       as avg_total_area,
-		percentile_cont(0.5) within group (order by total_area)  as perc_total_area,
-		stddev(total_area)                                       as stddev_total_area,
-		percentile_cont(0.01) within group (order by total_area) as _01_perc_total_area,
-		percentile_cont(0.25) within group (order by total_area) as _25_perc_total_area,
-		percentile_cont(0.75) within group (order by total_area) as _75_perc_total_area,
-		percentile_disc(0.99) within group (order by total_area) as _99_perc_total_area
+	max(total_area)                                          as max_total_area,
+	round(avg(total_area)::numeric, 2)                       as avg_total_area,
+	percentile_cont(0.5) within group (order by total_area)  as perc_total_area,
+	stddev(total_area)                                       as stddev_total_area,
+	percentile_cont(0.01) within group (order by total_area) as _01_perc_total_area,
+	percentile_cont(0.25) within group (order by total_area) as _25_perc_total_area,
+	percentile_cont(0.75) within group (order by total_area) as _75_perc_total_area,
+	percentile_disc(0.99) within group (order by total_area) as _99_perc_total_area
 from real_estate.flats;
 --
 --------------------+---------------+--------------+--------------+--------------+---------------+------------------+-------------------+-------------------+-------------------+-------------------+
@@ -327,7 +359,8 @@ from real_estate.flats;
 --------------------+---------------+--------------+--------------+--------------+---------------+------------------+-------------------+-------------------+-------------------+-------------------+
 
 
-/*ТОП-10 квартир с самой большой площадью: квартира 900кв.м. - это реальная квартира бизнес-класса на ул. Кораблестроителей. Это 3-х этажная квартира - пентхаус в 25-этажном доме*/
+--4.6 ТОП-10 квартир с самой большой площадью
+
 select  *
 from real_estate.flats
 order by  total_area desc
@@ -347,8 +380,11 @@ limit 10;
 -- 5893|6X8I   |F8EM   |     500.0|    6|              |         7.0|           |    7|           0|        0|        40.0|    0.0|         32440.0|             0.0|             2.0|
 --12401|6X8I   |F8EM   |     495.0|    7|          4.65|         7.0|      347.5|    7|           0|        0|        25.0|    0.0|                |             2.0|             0.0|
 -------+-------+-------+----------+-----+--------------+------------+-----------+-----+------------+---------+------------+-------+----------------+----------------+----------------+
+--Квартира 900кв.м. - это реальная квартира бизнес-класса на ул. Кораблестроителей, это 3-х этажная квартира - пентхаус в 25-этажном доме
 
-/*ТОП-10 квартир с самой маленькой площадью: миниквартира с площадью 12 кв.м.*/
+
+--4.7 ТОП-10 квартир с самой маленькой площадью: миниквартира с площадью 12 кв.м.
+
 select  *
 from real_estate.flats
 order by  total_area
@@ -371,18 +407,18 @@ limit 10;
 */
 
 
-/***   Статистика по полю rooms  ***/
+--4.8 Статистика по полю rooms
 select  count(*) filter (where rooms is null)               as rooms_is_null,
-		count(*) filter (where rooms = 0)                   as rooms_zero,
-		min(rooms) filter (where rooms != 0)                as min_rooms,
-		max(rooms)                                          as max_rooms,
-		round((avg(rooms))::numeric, 2)                     as avg_rooms,
-		percentile_cont(0.5) within group (order by rooms)  as perc_rooms,
-		stddev(rooms)                                       as stddev_rooms,
-		percentile_cont(0.01) within group (order by rooms) as _01_perc_rooms,
-		percentile_cont(0.25) within group (order by rooms) as _25_perc_rooms,
-		percentile_cont(0.75) within group (order by rooms) as _75_perc_rooms,
-		percentile_cont(0.99) within group (order by rooms) as _99_perc_rooms
+	count(*) filter (where rooms = 0)                   as rooms_zero,
+	min(rooms) filter (where rooms != 0)                as min_rooms,
+	max(rooms)                                          as max_rooms,
+	round((avg(rooms))::numeric, 2)                     as avg_rooms,
+	percentile_cont(0.5) within group (order by rooms)  as perc_rooms,
+	stddev(rooms)                                       as stddev_rooms,
+	percentile_cont(0.01) within group (order by rooms) as _01_perc_rooms,
+	percentile_cont(0.25) within group (order by rooms) as _25_perc_rooms,
+	percentile_cont(0.75) within group (order by rooms) as _75_perc_rooms,
+	percentile_cont(0.99) within group (order by rooms) as _99_perc_rooms
 from real_estate.flats;
 --
 ---------------+----------+---------+---------+---------+----------+------------------+--------------+--------------+--------------+--------------+
@@ -393,18 +429,18 @@ from real_estate.flats;
 --
 
 
-/***   Статистика по полю ceiling_height   ***/
+--4.9 Статистика по полю ceiling_height
 select  count(*) filter (where ceiling_height is null)               as ceiling_height_is_null,
-		count(*) filter (where ceiling_height = 0)                   as ceiling_height_0,
-		min(ceiling_height) filter (where ceiling_height != 0)       as min_ceiling_height,
-		max(ceiling_height)                                          as max_ceiling_height,
-		round(avg(ceiling_height::numeric), 2)                       as avg_ceiling_height,
-		percentile_cont(0.5) within group (order by ceiling_height)  as perc_ceiling_height,
-		stddev(ceiling_height)                                       as stddev_ceiling_height,
-		percentile_cont(0.01) within group (order by ceiling_height) as perc_ceiling_height,
-		percentile_cont(0.25) within group (order by ceiling_height) as perc_ceiling_height,
-		percentile_cont(0.75) within group (order by ceiling_height) as perc_ceiling_height,
-		percentile_cont(0.99) within group (order by ceiling_height) as perc_ceiling_height
+	count(*) filter (where ceiling_height = 0)                   as ceiling_height_0,
+	min(ceiling_height) filter (where ceiling_height != 0)       as min_ceiling_height,
+	max(ceiling_height)                                          as max_ceiling_height,
+	round(avg(ceiling_height::numeric), 2)                       as avg_ceiling_height,
+	percentile_cont(0.5) within group (order by ceiling_height)  as perc_ceiling_height,
+	stddev(ceiling_height)                                       as stddev_ceiling_height,
+	percentile_cont(0.01) within group (order by ceiling_height) as perc_ceiling_height,
+	percentile_cont(0.25) within group (order by ceiling_height) as perc_ceiling_height,
+	percentile_cont(0.75) within group (order by ceiling_height) as perc_ceiling_height,
+	percentile_cont(0.99) within group (order by ceiling_height) as perc_ceiling_height
 from real_estate.flats;
 --
 ------------------------+----------------+------------------+------------------+------------------+-------------------+---------------------+-------------------+-------------------+-------------------+-------------------+
@@ -414,7 +450,8 @@ from real_estate.flats;
 ------------------------+----------------+------------------+------------------+------------------+-------------------+---------------------+-------------------+-------------------+-------------------+-------------------+
 --
 
-/*ТОП-10 квартир с самыми высокими потолками: для некоторых значений, например 27, вероятно ошибка в разрядах*/
+--4.10 ТОП-10 квартир с самыми высокими потолками: для некоторых значений, например 27, вероятно ошибка в разрядах
+
 select  *
 from real_estate.flats
 where ceiling_height is not null
@@ -432,10 +469,11 @@ limit 10;
 --21824|K9HS   |LVBX   |      44.0|    2|          27.0|         2.0|       38.0|    2|           0|        0|         8.6|    2.0|                |                |                |
 --20478|6X8I   |F8EM   |      45.0|    1|          27.0|         4.0|       22.0|    2|           0|        0|        10.0|    1.0|         18975.0|             0.0|             3.0|
 -- 5807|6X8I   |F8EM   |      80.0|    2|          27.0|        36.0|       41.0|   13|           0|        0|        12.0|    5.0|         18732.0|             0.0|             3.0|
--------+-------+-------+----------+-----+--------------+------------+-----------+-----+------------+---------+------------+-------+----------------+----------------+----------------+
+-- .........................
 --
 
-/*Сколько объектов имеют аномально высокие потолки*/
+--4.11 Сколько объектов имеют аномально высокие потолки?
+
 select count(*) 
 from real_estate.flats
 where ceiling_height > (select percentile_cont(0.99) within group (order by ceiling_height) from real_estate.flats);
@@ -447,7 +485,8 @@ where ceiling_height > (select percentile_cont(0.99) within group (order by ceil
 -------+
 --
 
-/*Сколько объектов имеют аномально низкие потолки*/
+--4.12 Сколько объектов имеют аномально низкие потолки?
+
 select count(*) 
 from real_estate.flats
 where ceiling_height < (select percentile_cont(0.01) within group (order by ceiling_height) from real_estate.flats);
@@ -460,18 +499,19 @@ where ceiling_height < (select percentile_cont(0.01) within group (order by ceil
 --
 
 
-/***   Статистика по полю floors_total   ***/
+--4.13 Статистика по полю floors_total
+
 select  count(*) filter (where floors_total is null)               as floors_total_is_null,
-		count(*) filter (where floors_total = 0)                   as floors_total_zero,
-		min(floors_total) filter (where floors_total != 0)         as min_floors_total,
-		max(floors_total)                                          as max_floors_total,
-		round((avg(floors_total))::numeric, 2)                     as avg_floors_total,
-		percentile_cont(0.5) within group (order by rooms)         as perc_floors_total,
-		stddev(floors_total)                                       as stddev_rooms,
-		percentile_cont(0.01) within group (order by floors_total) as _01_perc_floors_total,
-		percentile_cont(0.25) within group (order by floors_total) as _25_perc_floors_total,
-		percentile_cont(0.75) within group (order by floors_total) as _75_perc_floors_total,
-		percentile_cont(0.99) within group (order by floors_total) as _99_perc_floors_total
+	count(*) filter (where floors_total = 0)                   as floors_total_zero,
+	min(floors_total) filter (where floors_total != 0)         as min_floors_total,
+	max(floors_total)                                          as max_floors_total,
+	round((avg(floors_total))::numeric, 2)                     as avg_floors_total,
+	percentile_cont(0.5) within group (order by rooms)         as perc_floors_total,
+	stddev(floors_total)                                       as stddev_rooms,
+	percentile_cont(0.01) within group (order by floors_total) as _01_perc_floors_total,
+	percentile_cont(0.25) within group (order by floors_total) as _25_perc_floors_total,
+	percentile_cont(0.75) within group (order by floors_total) as _75_perc_floors_total,
+	percentile_cont(0.99) within group (order by floors_total) as _99_perc_floors_total
 from real_estate.flats;
 --
 ----------------------+-----------------+----------------+----------------+----------------+-----------------+-----------------+---------------------+---------------------+---------------------+---------------------+
@@ -482,18 +522,18 @@ from real_estate.flats;
 --
 
 
-/***   Статистика по полю  living_area   ***/
+--4.14 Статистика по полю  living_area
 select  count(*) filter (where living_area is null)               as living_area_is_null,
-		count(*) filter (where living_area = 0)                   as living_area_0,
-		min(living_area) filter (where living_area != 0)          as min_living_area,
-		max(living_area)                                          as max_living_area,
-		round(avg(living_area)::numeric, 2)                       as avg_living_area,
-		percentile_cont(0.5) within group (order by  living_area) as perc_living_area,
-		stddev(living_area)                                       as stddev_living_area,
-		percentile_cont(0.01) within group (order by living_area) as _01_perc_living_area,
-		percentile_cont(0.25) within group (order by living_area) as _25_perc_living_area,
-		percentile_cont(0.75) within group (order by living_area) as _75_perc_living_area,
-		percentile_cont(0.99) within group (order by living_area) as _99_perc_living_area
+	count(*) filter (where living_area = 0)                   as living_area_0,
+	min(living_area) filter (where living_area != 0)          as min_living_area,
+	max(living_area)                                          as max_living_area,
+	round(avg(living_area)::numeric, 2)                       as avg_living_area,
+	percentile_cont(0.5) within group (order by  living_area) as perc_living_area,
+	stddev(living_area)                                       as stddev_living_area,
+	percentile_cont(0.01) within group (order by living_area) as _01_perc_living_area,
+	percentile_cont(0.25) within group (order by living_area) as _25_perc_living_area,
+	percentile_cont(0.75) within group (order by living_area) as _75_perc_living_area,
+	percentile_cont(0.99) within group (order by living_area) as _99_perc_living_area
 from real_estate.flats
 ;
 --
@@ -504,7 +544,8 @@ from real_estate.flats
 -----------------------+-------------+---------------+---------------+---------------+----------------+------------------+--------------------+--------------------+--------------------+--------------------+
 --
 
-/*ТОП-5 самых больших значений жилой плошади: на первом месте квартира бизнес-класса*/
+--4.15 ТОП-5 самых больших значений жилой плошади: на первом месте квартира бизнес-класса
+
 select  *
 from real_estate.flats
 where living_area is not null
@@ -519,8 +560,12 @@ limit 5;
 --12401|6X8I   |F8EM   |     495.0|    7|          4.65|         7.0|      347.5|    7|           0|        0|        25.0|    0.0|                |             2.0|             0.0|
 -- 4237|6X8I   |F8EM   |     517.0|    7|              |         4.0|      332.0|    3|           0|        0|        22.0|       |         22835.0|             2.0|             2.0|
 --12859|6X8I   |F8EM   |     631.2|    7|           3.9|         4.0|      322.3|    4|           0|        0|        19.5|    1.0|         25707.0|             0.0|             2.0|
+-------+-------+-------+----------+-----+--------------+------------+-----------+-----+------------+---------+------------+-------+----------------+----------------+----------------+
+--
 
-/*ТОП-5 самых маленьких значений жилой площади*/
+
+--4.16 ТОП-5 самых маленьких значений жилой площади
+
 select  *
 from real_estate.flats
 order by living_area
@@ -534,21 +579,22 @@ limit 5;
 -- 3242|6X8I   |F8EM   |      41.0|    1|              |        17.0|        3.0|   17|           0|        0|        11.0|       |         19272.0|             0.0|             0.0|
 --23574|6X8I   |F8EM   |     139.0|    3|           3.0|         8.0|        3.0|    8|           0|        0|        16.0|    1.0|         33255.0|             1.0|             3.0|
 --17582|6X8I   |F8EM   |      22.0|    0|              |        25.0|        5.0|    8|           0|        0|            |    2.0|         22735.0|             1.0|             1.0|
+-------+-------+-------+----------+-----+--------------+------------+-----------+-----+------------+---------+------------+-------+----------------+----------------+----------------+
+--
 
 
-
-/***   Статистика по полю  floors   ***/
+--4.17 Статистика по полю  floors
 select  count(*) filter (where floor is null)               as floor_is_null,
-		count(*) filter (where floor = 0)                   as floor_zero,
-		min(floor) filter (where floor != 0)                as min_floor,
-		max(floor)                                          as max_floor,
-		round(avg(floor)::numeric, 2)                       as avg_floor,
-		percentile_cont(0.5) within group (order by floor)  as perc_floor,
-		stddev(floor)                                       as stddev_floor,
-		percentile_cont(0.01) within group (order by floor) as _01_perc_floor,
-		percentile_cont(0.25) within group (order by floor) as _25_perc_floor,
-		percentile_cont(0.75) within group (order by floor) as _75_perc_floor,
-		percentile_cont(0.99) within group (order by floor) as _99_perc_floor
+	count(*) filter (where floor = 0)                   as floor_zero,
+	min(floor) filter (where floor != 0)                as min_floor,
+	max(floor)                                          as max_floor,
+	round(avg(floor)::numeric, 2)                       as avg_floor,
+	percentile_cont(0.5) within group (order by floor)  as perc_floor,
+	stddev(floor)                                       as stddev_floor,
+	percentile_cont(0.01) within group (order by floor) as _01_perc_floor,
+	percentile_cont(0.25) within group (order by floor) as _25_perc_floor,
+	percentile_cont(0.75) within group (order by floor) as _75_perc_floor,
+	percentile_cont(0.99) within group (order by floor) as _99_perc_floor
 from real_estate.flats;
 --
 ---------------+----------+---------+---------+---------+----------+------------------+--------------+--------------+--------------+--------------+
@@ -559,18 +605,19 @@ from real_estate.flats;
 
 
 
-/***   Статистика по полю balcony  ***/
+--4.18 Статистика по полю balcony
+
 select  count(balcony) filter (where balcony is null )        as count_balcony_is_null, 
-		count(balcony) filter (where balcony = 0 )            as count_balcony_zero,
-		min(balcony) filter (where balcony != 0 )             as min_balcony,
-		max(balcony)                                          as max_balcony,
-		round(avg(balcony)::numeric, 2)                       as avg_balcony,
-		percentile_cont(0.5) within group (order by balcony)  as perc_balcony,
-		stddev(balcony)                                       as stddev_balcony,
-		percentile_cont(0.01) within group (order by balcony) as _01_perc_floor,
-		percentile_cont(0.25) within group (order by balcony) as _25_perc_floor,
-		percentile_cont(0.75) within group (order by balcony) as _75_perc_floor,
-		percentile_cont(0.99) within group (order by balcony) as _99_perc_floor
+	count(balcony) filter (where balcony = 0 )            as count_balcony_zero,
+	min(balcony) filter (where balcony != 0 )             as min_balcony,
+	max(balcony)                                          as max_balcony,
+	round(avg(balcony)::numeric, 2)                       as avg_balcony,
+	percentile_cont(0.5) within group (order by balcony)  as perc_balcony,
+	stddev(balcony)                                       as stddev_balcony,
+	percentile_cont(0.01) within group (order by balcony) as _01_perc_floor,
+	percentile_cont(0.25) within group (order by balcony) as _25_perc_floor,
+	percentile_cont(0.75) within group (order by balcony) as _75_perc_floor,
+	percentile_cont(0.99) within group (order by balcony) as _99_perc_floor
 from real_estate.flats;
 --
 --count_balcony_is_null|count_balcony_zero|min_balcony|max_balcony|avg_balcony|perc_balcony|stddev_balcony    |_01_perc_floor|_25_perc_floor|_75_perc_floor|_99_perc_floor|
@@ -578,7 +625,8 @@ from real_estate.flats;
 --                    0|              3725|        1.0|        5.0|       1.15|         1.0|1.0711686116269614|           0.0|           0.0|           2.0|           5.0|
 
 
-/***   Статистика по полю kitchen_area   ***/
+
+--4.19  Статистика по полю kitchen_area
 select  count(*) filter (where kitchen_area is null)               as  kitchen_area_is_null,
 		count(*) filter (where kitchen_area = 0)                   as  kitchen_area_zero,
 		min(kitchen_area)                                          as min_kitchen_area,
@@ -592,16 +640,21 @@ select  count(*) filter (where kitchen_area is null)               as  kitchen_a
 		percentile_cont(0.99) within group (order by kitchen_area) as _99_perc
 from real_estate.flats;
 --
+----------------------+-----------------+----------------+----------------+----------------+-----------------+-------------------+--------+--------+--------+-----------------+
 --kitchen_area_is_null|kitchen_area_zero|min_kitchen_area|max_kitchen_area|avg_kitchen_area|perc_kitchen_area|stddev_kitchen_area|_01_perc|_25_perc|_75_perc|_99_perc         |
 ----------------------+-----------------+----------------+----------------+----------------+-----------------+-------------------+--------+--------+--------+-----------------+
 --                2269|                0|             1.3|           112.0|           10.57|9.100000381469727|   5.90175263480589|     5.0|     7.0|    12.0|35.05999908447269|
+----------------------+-----------------+----------------+----------------+----------------+-----------------+-------------------+--------+--------+--------+-----------------+
+--
 
 
-/***   Статистика по полю is_apartment   ***/
+
+--4.20 Статистика по полю is_apartment
+
 select	count(*) filter (where is_apartment is null)                                                        as  is_apartment_is_null,
-		count(*) filter (where is_apartment = 0)                                                            as  is_apartment_0,
-		count(*) filter (where is_apartment = 1)                                                            as  is_apartment_1,
-		round(count(*) filter (where is_apartment = 1) * 1.0 / count(*) filter (where is_apartment = 0), 4) as share
+	count(*) filter (where is_apartment = 0)                                                            as  is_apartment_0,
+	count(*) filter (where is_apartment = 1)                                                            as  is_apartment_1,
+	round(count(*) filter (where is_apartment = 1) * 1.0 / count(*) filter (where is_apartment = 0), 4) as share
 from real_estate.flats;
 --
 ----------------------+--------------+--------------+------+
@@ -611,11 +664,13 @@ from real_estate.flats;
 ----------------------+--------------+--------------+------+
 		
 
-/***   Статистика по полю  open_plan   ***/
+
+--4.21 Статистика по полю  open_plan
+
 select  count(*) filter (where open_plan = 0)                                                         as  open_plan_0,
-		count(*) filter (where open_plan = 1)                                                         as  open_plan_1,
-		round(count(*) filter (where open_plan = 1) * 1.0 / count(*) filter (where open_plan = 0), 4) as share,
-		count(*) filter (where open_plan is null)                                                     as  open_plan_is_null
+	count(*) filter (where open_plan = 1)                                                         as  open_plan_1,
+	round(count(*) filter (where open_plan = 1) * 1.0 / count(*) filter (where open_plan = 0), 4) as share,
+	count(*) filter (where open_plan is null)                                                     as  open_plan_is_null
 from real_estate.flats;
 --
 -------------+-----------+------+-----------------+
@@ -625,7 +680,10 @@ from real_estate.flats;
 -------------+-----------+------+-----------------+
 --
 
-/*У 5 студий указано количество комнат более 1, вероятно это количество зон*/
+
+
+--4.22 Есть ли студии с количеством комнат больше одной?
+
 select  *
 from real_estate.flats
 where open_plan = 1 and rooms > 1
@@ -640,8 +698,12 @@ order by rooms  desc;
 --14017|FJEG   |F8EM   |      59.0|    3|           2.5|         9.0|       37.6|    3|           0|        1|            |    1.0|         27820.0|             0.0|             1.0|
 --12760|T0TI   |F8EM   |      51.0|    2|           2.5|        12.0|       30.0|   10|           0|        1|            |    2.0|                |                |                |
 -------+-------+-------+----------+-----+--------------+------------+-----------+-----+------------+---------+------------+-------+----------------+----------------+----------------+
+--У 5 студий указано количество комнат более 1, вероятно это количество зон
 
-/*У 59 студий указано количество комнат 0*/
+
+
+--4.23 Есть ли студии с количеством комнат равное 0?
+
 select  count(*)
 from real_estate.flats
 where open_plan = 1 and rooms = 0;
@@ -651,21 +713,23 @@ where open_plan = 1 and rooms = 0;
 -------+
 --   59|
 -------+
---
+--У 59 студий указано количество комнат 0
 
 
-/***   Статистика по полю airports_nearest   ***/
+
+--4.24 Статистика по полю airports_nearest
+
 select  count(airports_nearest) filter (where airports_nearest is null ) as _is_null,
-		count(airports_nearest) filter (where airports_nearest = 0 )     as count_airports_nearest_zero,
-		min(airports_nearest) filter (where airports_nearest != 0 )      as min_airports_nearest,
-		max(airports_nearest)                                            as max_airports_nearest,
-		round(avg(airports_nearest)::numeric, 2)                         as avg_airports_nearest,
-		percentile_cont(0.5) within group (order by airports_nearest)    as perc_airports_nearest,
-		stddev(airports_nearest)                                         as stddev_airports_nearest,
-		percentile_cont(0.01) within group (order by airports_nearest)   as _01_perc,
-		percentile_cont(0.25) within group (order by airports_nearest)   as _25_perc,
-		percentile_cont(0.75) within group (order by airports_nearest)   as _75_perc,
-		percentile_cont(0.99) within group (order by airports_nearest)   as _99_perc
+	count(airports_nearest) filter (where airports_nearest = 0 )     as count_airports_nearest_zero,
+	min(airports_nearest) filter (where airports_nearest != 0 )      as min_airports_nearest,
+	max(airports_nearest)                                            as max_airports_nearest,
+	round(avg(airports_nearest)::numeric, 2)                         as avg_airports_nearest,
+	percentile_cont(0.5) within group (order by airports_nearest)    as perc_airports_nearest,
+	stddev(airports_nearest)                                         as stddev_airports_nearest,
+	percentile_cont(0.01) within group (order by airports_nearest)   as _01_perc,
+	percentile_cont(0.25) within group (order by airports_nearest)   as _25_perc,
+	percentile_cont(0.75) within group (order by airports_nearest)   as _75_perc,
+	percentile_cont(0.99) within group (order by airports_nearest)   as _99_perc
 from real_estate.flats;
 --
 ----------+---------------------------+--------------------+--------------------+--------------------+---------------------+-----------------------+--------+--------+--------+-----------------+
@@ -676,15 +740,16 @@ from real_estate.flats;
 
 
 
-/***   Статистика по полю parks_around3000   ***/
+--4.25 Статистика по полю parks_around3000
+
 select  count(*) filter (where parks_around3000 is null)              as parks_around3000_is_null,
-		count(*) filter (where parks_around3000 = 0)                  as parks_around3000_zero,
-		count(*) filter (where parks_around3000 != 0)                 as parks_around3000,
-		min(parks_around3000) filter (where parks_around3000 != 0 ),
-		max(parks_around3000),
-		round(avg(parks_around3000)::numeric, 2)                      as avg_parks_around3000,
-		percentile_cont(0.5) within group (order by parks_around3000) as perc_parks_around3000,
-		stddev(parks_around3000)                                      as stddev_parks_around3000
+	count(*) filter (where parks_around3000 = 0)                  as parks_around3000_zero,
+	count(*) filter (where parks_around3000 != 0)                 as parks_around3000,
+	min(parks_around3000) filter (where parks_around3000 != 0 ),
+	max(parks_around3000),
+	round(avg(parks_around3000)::numeric, 2)                      as avg_parks_around3000,
+	percentile_cont(0.5) within group (order by parks_around3000) as perc_parks_around3000,
+	stddev(parks_around3000)                                      as stddev_parks_around3000
 from real_estate.flats;
 --
 --------------------------+---------------------+----------------+---+---+--------------------+---------------------+-----------------------+
@@ -695,15 +760,15 @@ from real_estate.flats;
 
 
 
-/***   Статистика по полю ponds_around3000   ***/
+--4.26 Статистика по полю ponds_around3000
 select  count(*) filter (where ponds_around3000 is null)              as ponds_around3000_is_null,
-		count(*) filter (where ponds_around3000 = 0)                  as ponds_around3000_zero,
-		count(*) filter (where ponds_around3000 > 0)                  as ponds_around3000,
-		min(ponds_around3000) filter (where ponds_around3000 != 0 ),
-		max(ponds_around3000),
-		round(avg(ponds_around3000)::numeric, 2)                      as avg_ponds_around3000,
-		percentile_cont(0.5) within group (order by ponds_around3000) as perc_ponds_around3000,
-		stddev(ponds_around3000)                                      as stddev_ponds_around3000
+	count(*) filter (where ponds_around3000 = 0)                  as ponds_around3000_zero,
+	count(*) filter (where ponds_around3000 > 0)                  as ponds_around3000,
+	min(ponds_around3000) filter (where ponds_around3000 != 0 ),
+	max(ponds_around3000),
+	round(avg(ponds_around3000)::numeric, 2)                      as avg_ponds_around3000,
+	percentile_cont(0.5) within group (order by ponds_around3000) as perc_ponds_around3000,
+	stddev(ponds_around3000)                                      as stddev_ponds_around3000
 from real_estate.flats;
 /--
 --------------------------+---------------------+----------------+---+---+--------------------+---------------------+-----------------------+
@@ -715,23 +780,23 @@ from real_estate.flats;
 
 
 
-/***   Стоимость квартир и стоимость за кв.метр. Объединение 2х таблиц для расчета средней стоимости кв.м.   ***/
+--4.27 Стоимость квартир и стоимость за кв.метр. Объединение 2х таблиц для расчета средней стоимости кв.м.
 select  min(a.last_price) as min_price,
-		max(a.last_price) as max_price,
-		round(avg(a.last_price)::numeric, 2)                                      as avg_price,
-		percentile_cont(0.5) within group (order by a.last_price)                 as perc_price,
-		percentile_cont(0.01) within group (order by a.last_price)                as _01_perc_price,
-		percentile_cont(0.25) within group (order by a.last_price)                as _25_perc_price,
-		percentile_cont(0.75) within group (order by a.last_price)                as _75_perc_price,
-		percentile_cont(0.99) within group (order by a.last_price)                as _99_perc_price,
-		min(a.last_price / f.total_area)                                          as min_price_sq_meter,
-		max(a.last_price / f.total_area)                                          as max_price_sq_meter,
-		round(avg(a.last_price / f.total_area)::numeric, 2)                       as avg_price_sq_meter,
-		percentile_cont(0.5) within group (order by a.last_price / f.total_area)  as perc_price_sq_meter,
-		percentile_cont(0.01) within group (order by a.last_price / f.total_area) as _01_perc_price_sq_meter,
-		percentile_cont(0.25) within group (order by a.last_price / f.total_area) as _25_perc_price_sq_meter,
-		percentile_cont(0.75) within group (order by a.last_price / f.total_area) as _75_perc_price_sq_meter,
-		percentile_cont(0.99) within group (order by a.last_price / f.total_area) as _99_perc_price_sq_meter
+	max(a.last_price) as max_price,
+	round(avg(a.last_price)::numeric, 2)                                      as avg_price,
+	percentile_cont(0.5) within group (order by a.last_price)                 as perc_price,
+	percentile_cont(0.01) within group (order by a.last_price)                as _01_perc_price,
+	percentile_cont(0.25) within group (order by a.last_price)                as _25_perc_price,
+	percentile_cont(0.75) within group (order by a.last_price)                as _75_perc_price,
+	percentile_cont(0.99) within group (order by a.last_price)                as _99_perc_price,
+	min(a.last_price / f.total_area)                                          as min_price_sq_meter,
+	max(a.last_price / f.total_area)                                          as max_price_sq_meter,
+	round(avg(a.last_price / f.total_area)::numeric, 2)                       as avg_price_sq_meter,
+	percentile_cont(0.5) within group (order by a.last_price / f.total_area)  as perc_price_sq_meter,
+	percentile_cont(0.01) within group (order by a.last_price / f.total_area) as _01_perc_price_sq_meter,
+	percentile_cont(0.25) within group (order by a.last_price / f.total_area) as _25_perc_price_sq_meter,
+	percentile_cont(0.75) within group (order by a.last_price / f.total_area) as _75_perc_price_sq_meter,
+	percentile_cont(0.99) within group (order by a.last_price / f.total_area) as _99_perc_price_sq_meter
 from real_estate.advertisement as a
 join real_estate.flats         as f using(id);
 /*Средние значения сильно отличаются от медианных. */
@@ -748,18 +813,19 @@ join real_estate.flats         as f using(id);
 --------------------+------------------+------------------+-------------------+-----------------------+-----------------------+-----------------------+-----------------------+
 
 
-/*Распределение объявлений по типам населенных пунктов и регионам
- * На города приходится 84.6% объявлений, из них 18.13% на города области и 66.47% на Санкт-Петербург. На третьем месте по числу объявлений - поселоки 8.85%*/
+
+--4.28 Распределение объявлений по типам населенных пунктов и регионам
+
 with 
 --категоризация по региону
 city_region as
 	(select *, case when city != 'Санкт-Петербург' then 'Область' else city end as region
 	from real_estate.city
 	)
-select  t.type as ТИП, cr.region as РЕГИОН,
-		count(*)                                                          as ОБЪЯВЛЕНИЙ,
-		round(count(*) / sum(count(*)) over(partition by cr.region), 4)   as ДОЛЯ_ОБЪЯВЛ_В_РАЗРЕЗЕ_РЕГИОНА,
-		round(count(*) / sum(count(*)) over(), 4)                         as ДОЛЯ_ОБЪЯВЛ_ОТ_ВСЕХ
+select  t.type as ТИП, cr.region                                          as РЕГИОН,
+	count(*)                                                          as ОБЪЯВЛЕНИЙ,
+	round(count(*) / sum(count(*)) over(partition by cr.region), 4)   as ДОЛЯ_ОБЪЯВЛ_В_РАЗРЕЗЕ_РЕГИОНА,
+	round(count(*) / sum(count(*)) over(), 4)                         as ДОЛЯ_ОБЪЯВЛ_ОТ_ВСЕХ
 from real_estate.flats 
 left join real_estate.type as t using(type_id) 
 left join city_region      as cr using(city_id)
@@ -781,33 +847,41 @@ order by ДОЛЯ_ОБЪЯВЛ_ОТ_ВСЕХ;
 --город                                    |Область        |      4287|                       0.5407|             0.1813|
 --город                                    |Санкт-Петербург|     15721|                       1.0000|             0.6647|
 -------------------------------------------+---------------+----------+-----------------------------+-------------------+
+-- На города приходится 84.6% объявлений, из них 18.13% на города области и 66.47% на Санкт-Петербург. На третьем месте по числу объявлений - поселоки 8.85%
 
 
-/*Сегменты рынка с коротким и длинным сроками активности объявлений*/
+
+-.29 Сегменты рынка с коротким и длинным сроками активности объявлений
+
 with 
 --категоризация по региону
 city_region as
-	(select *, case when city != 'Санкт-Петербург' then 'Область' else city end as region
+	(select *,
+		case when city != 'Санкт-Петербург' then 'Область' else city end as region
 	from real_estate.city
 	),
+
 --категоризация по сроку активности объявления
 tab1 as (
-	select  case  when a.days_exposition is null then '5. не продана'
-				  when a.days_exposition <= 30 then '1. до 1 мес'
-				  when a.days_exposition <= 90 then '2. до 3 мес'
-				  when a.days_exposition <= 180 then '3. до 6 мес'
-				  else '4. более 6 мес'
-			end       as КАТЕГОРИЯ,
-			cr.region as РЕГИОН,
-			t.type    as ТИП, 
-			count(*)  as ОБЪЯВЛЕНИЙ
+	select
+		case
+		when a.days_exposition is null then '5. не продана'
+			when a.days_exposition <= 30 then '1. до 1 мес'
+			when a.days_exposition <= 90 then '2. до 3 мес'
+			when a.days_exposition <= 180 then '3. до 6 мес'
+		else '4. более 6 мес'
+		end       as КАТЕГОРИЯ,
+		cr.region as РЕГИОН,
+		t.type    as ТИП, 
+		count(*)  as ОБЪЯВЛЕНИЙ
 	from real_estate.flats 
 	left join real_estate.advertisement as a using(id)
 	left join real_estate.type          as t using(type_id) 
 	left join city_region               as cr using(city_id)
 	group by КАТЕГОРИЯ, РЕГИОН, ТИП
 	)
-select  *,	round(ОБЪЯВЛЕНИЙ / sum(ОБЪЯВЛЕНИЙ) over(partition by КАТЕГОРИЯ), 4) as ДОЛЯ
+select  *,
+	round(ОБЪЯВЛЕНИЙ / sum(ОБЪЯВЛЕНИЙ) over(partition by КАТЕГОРИЯ), 4) as ДОЛЯ
 from tab1
 where КАТЕГОРИЯ = '1. до 1 мес' or КАТЕГОРИЯ = '4. более 6 мес'
 group by КАТЕГОРИЯ, РЕГИОН, ТИП, ОБЪЯВЛЕНИЙ
@@ -823,3 +897,91 @@ order by КАТЕГОРИЯ, ОБЪЯВЛЕНИЙ desc;
 --4. более 6 мес|Область        |город                              |      1165|0.1811|
 --4. более 6 мес|Область        |посёлок                            |       539|0.0838|
 --..................................................................................
+
+
+--
+/* Выводы по результатам:
+1)В таблице flats 23650 строк. Есть 16 объектов недвижимости с одинаковыми характеристиками (разные id), однако у них различные даты публикации, сроки активности и стоимости.
+2)Поле total_area:
+	нет пропусков и нулевых значений;
+	минимальное значение 12, максимальное 900;
+	среднее (60,33) значительно выше медианы (52,0),
+ 	необходимо ограничить выборку сверху - 99 перцентиль равен 197,9.
+3)Поле rooms:
+	нет пропусков, есть 197 нулевых знаений;
+	минимальное значение (без 0) 1, максимальное 19 - многовато;
+	среднее (2,07) очень близко к медиане (2,0);
+	есть аномально высокие и низкие значения;
+	необходимо ограничить выборку сверху -  99 перцентиль равен 5,0	 
+4)Поле ceiling_height:
+	есть 9160 пропусков, нет нулевых значений;
+	минимальное значение 1, максимальное 100;
+	среднее (2,77) несколько выше, чем медиана (2,65);
+	есть аномально высокие и низкие значения;
+	необходимо ограничить выборку снизу - 01 перцентиль равен 2,5 и сверху -  99 перцентиль равен 3,82;
+	У 145 объектов аномально высокие значения высоты потолка, а у 73 - аномально низкие.
+	У некоторых объектов вероятно ошибка в разрядах в поле с высотой потолков, например указано 27м, вероятно должно быть 2,7м.
+	Перед фильтрацией можно откорректировать значения,чтобы сохранить больше объектов в выборке.
+5)Поле floors_total:
+	есть 86 пропусков, нет нулевых значений;
+	минимальное значение 1, максимальное 60;
+	среднее (10,68) сильно выше медианы (2,0);
+ 	99 перцентиль равен 26.
+6)Поле living_area:
+	есть 1898 пропусков, нет нулевых значений;
+	минимальное значение 2, максимальное 409,7;
+	среднее (34,45) несколько выше медианы (30,0);
+	01 перцентиль равен 13,0;
+	99 перцентиль равен 120,0. 
+7)Поле floor:
+	нет пропусков и нулевых значений;
+	минимальное значение 1, максимальное 33;
+	среднее (5,89) немного выше медианы (4,0);
+	99 перцентиль равен 23,0.	
+8)Поле is_apartment:
+	пропусков нет;
+	доля апартаментов от всех объектов составляет 0,21%
+9)! Поле balcony:
+	нет пропусков, 3725 нулевых значений;
+	минимальное значение 0, максимальное 5 - слишком много;
+	среднее (1,15) незначительно выше медианы (1,0);
+10)Поле kitchen_area:
+	есть 2269 пропусков, нет нулевых значений;
+	минимальное значение 1,3, максимальное 112;
+	среднее (10.57) несколько выше медианы (9,1).
+11)Поле living_area: 
+	есть 1898 пропусков, нет нулевых значений;
+	минимальное значение 2, максимальное 409,7;
+	среднее (34,45) несколько выше медианы (30,0);
+	есть аномально высокие и низкие значения;
+	01 перцентиль равен 13,0 ;
+	99 перцентиль равен 120,0.
+12)Поле open_plan:
+	пропусков нет;
+	доля студий от всех объектов составляет 0,28%;
+	у 5 студий указано количество комнат более 1 - вероятно это зоны, а 59 указано количество комнат 0 - ?
+13)Поле airports_nearest:
+	пропусков нет, одно нулевой значение;
+	минимальное значение 6450 (без учета нулевого), максимальное 84869;
+	среднее (28803,23), очень большой разброс данных (78419),
+	медиана ниже среднего (28803,23);
+	99 перцентиль равен 58514,75.
+14)Поле parks_around3000:
+	5510 пропусков, 10080 нулей и 8060 ненулевых значений;
+	минимальное значение 1 (без учета нулей), максимальное 3;
+	парк - он или есть или его нет, поэтому пропуски необходимо заменить нулевыми значениями
+15)Поле ponds_around3000:
+	5510 пропусков, 9055 нулей и 9085 ненулевых значений;
+	минимальное значение 1 (без учета нулей), максимальное 3;
+	водоем - он или есть или его нет, поэтому пропуски необходимо заменить нулевыми значениями.
+16)Стоимость квартиры:
+	минимальное значение 12.190 (вероятно оно указано в тысячах), максимальное значение 763.000.000;
+	среднее 6.541.126,90 значительно выше медианы 4.650.000,0;
+	есть аномально высокие и низкие значения;
+	необходимо внести корректировку минимального значения и ограничить выборку снизу и сверху.
+17)Средняя цена за квадратный метр:
+	минимальное значение 111,83, максимальное значение 1.907.500;
+	среднее 99.432,25 несколько выше медианы 95.000,0;
+ 	есть аномально высокие и низкие значения;
+	необходимо внести корректировку минимального значения.
+ */
