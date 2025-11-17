@@ -1,19 +1,14 @@
-/* Проект первого модуля: анализ данных для агентства недвижимости
- * Часть 2. Решаем ad hoc задачи
- * 
- * Автор: Егорова Ольга
- * Дата: 02.12.2024 , корректировка 05.12.2025 (задачи 2 - добавлены оконные функции ранжирования и задача 3 - добавлена агрегатная функция string_agg() )
+/* Автор: Егорова Ольга
 */
 
--- Задача 1: Время активности объявлений
--- Результат запроса должен ответить на такие вопросы:
--- 1. Какие сегменты рынка недвижимости Санкт-Петербурга и городов Ленинградской области 
---    имеют наиболее короткие или длинные сроки активности объявлений?
--- 2. Какие характеристики недвижимости, включая площадь недвижимости, среднюю стоимость квадратного метра, 
---    количество комнат и балконов и другие параметры, влияют на время активности объявлений? 
---    Как эти зависимости варьируют между регионами?
--- 3. Есть ли различия между недвижимостью Санкт-Петербурга и Ленинградской области по полученным результатам?
-
+/*
+Время активности объявлений
+Вопросы, на которые требуется ответить:
+	1. Какие сегменты рынка недвижимости Санкт-Петербурга и городов Ленинградской области имеют наиболее короткие или длинные сроки активности объявлений?
+	2. Какие характеристики недвижимости, включая площадь недвижимости, среднюю стоимость квадратного метра, количество комнат и балконов и другие параметры, влияют на время активности объявлений? 
+	Как эти зависимости варьируют между регионами?
+	3. Есть ли различия между недвижимостью Санкт-Петербурга и Ленинградской области по полученным результатам?
+*/
 with
 --аномально высокие и низкие значения
 confines as (
@@ -50,42 +45,44 @@ general_tab as (
 			when a.days_exposition <= 90 then '2. до 3 мес'
 			when a.days_exposition <= 180 then '3. до 6 мес'
 			else '4. более 6 мес'
-		end                                  as category,
+		end                         as category,
 		--категоризация по региону
 		case
 			when c.city != 'Санкт-Петербург'
-			then 'Область' else c.city end   as region,
+			then 'Область'
+			else c.city
+			end                 as region,
 		--поле со средним чеком
-		a.last_price / f.total_area          as price_square_meter
+		a.last_price / f.total_area as price_square_meter
 	from flats_new                      as f
 	left join real_estate.advertisement as a using(id)
 	left join real_estate.city          as c  using(city_id)
 	left join real_estate.type          as t using(type_id)
 )
 select
-		category as КАТЕГОРИЯ,
-		region   as РЕГИОН,
-		 		--показатели по объявлениям
-		count(*)                                                          as ОБЪЯВЛЕНИЙ,
-		round(count(*) / sum(count(*)) over(partition by region), 2)      as ДОЛЯ_В_РАЗРЕЗЕ_РЕГИОНА,
-		round(count(*) / sum(count(*)) over(partition by category), 2)    as ДОЛЯ_В_РАЗРЕЗЕ_КАТЕГОРИЙ,
-		round(count(*) / sum(count(*)) over(), 2)                         as ДОЛЯ_ОБЪЯВЛ_ОТ_ВСЕХ,
-		       --доли видов недвижимости
-		round(count(*) filter( where is_apartment = 1) / sum(count(*)) over(partition by category, region), 3)                    as ДОЛЯ_АПАРТ,
-		round(count(*) filter( where open_plan = 1) / sum(count(*)) over(partition by category, region), 3)                       as ДОЛЯ_СТУД,
-		round(count(*) filter( where is_apartment = 0 and open_plan = 0 ) / sum(count(*)) over(partition by category, region), 3) as ДОЛЯ_КВАРТ,
-		      --показатели В ЦЕЛОМ О НЕДВИЖИМОСТИ
-		round(avg(total_area)::numeric, 2)                                      as СР_ПЛОЩАДЬ,
-		round(avg(last_price / total_area)::numeric, 2)                         as СР_ЦЕНА_КВ_М,
-		percentile_disc(0.5) within group (order by rooms)                      as МЕДИАНА_КОМНАТЫ,
-		percentile_disc(0.5) within group (order by floor)                      as МЕДИАНА_ЭТАЖ,
-		percentile_disc(0.5) within group (order by floors_total)::integer      as МЕДИАНА_ЭТ_ДОМА,
-		percentile_disc(0.5) within group (order by ceiling_height)             as МЕДИАНА_ПОТОЛОК,
-		round(avg(kitchen_area)::numeric, 2)                                    as СР_ПЛОЩ_КУХНИ,
-		percentile_disc(0.5) within group (order by balcony) ::integer          as МЕДИАНА_БАЛКОНЫ,
-		percentile_cont(0.5) within group (order by airports_nearest)           as ДО_АЭРОПОРТА,
-		percentile_disc(0.5) within group (order by parks_around3000)::integer  as КОЛ_ПАРКОВ,
-		percentile_disc(0.5) within group (order by ponds_around3000)::integer  as КОЛ_ВОДОЕМОВ
+	category as КАТЕГОРИЯ,
+	region   as РЕГИОН,
+		--показатели по объявлениям
+	count(*)                                                          as ОБЪЯВЛЕНИЙ,
+	round(count(*) / sum(count(*)) over(partition by region), 2)      as ДОЛЯ_В_РАЗРЕЗЕ_РЕГИОНА,
+	round(count(*) / sum(count(*)) over(partition by category), 2)    as ДОЛЯ_В_РАЗРЕЗЕ_КАТЕГОРИЙ,
+	round(count(*) / sum(count(*)) over(), 2)                         as ДОЛЯ_ОБЪЯВЛ_ОТ_ВСЕХ,
+	       --доли видов недвижимости
+	round(count(*) filter( where is_apartment = 1) / sum(count(*)) over(partition by category, region), 3)                    as ДОЛЯ_АПАРТ,
+	round(count(*) filter( where open_plan = 1) / sum(count(*)) over(partition by category, region), 3)                       as ДОЛЯ_СТУД,
+	round(count(*) filter( where is_apartment = 0 and open_plan = 0 ) / sum(count(*)) over(partition by category, region), 3) as ДОЛЯ_КВАРТ,
+	      --показатели В ЦЕЛОМ О НЕДВИЖИМОСТИ
+	round(avg(total_area)::numeric, 2)                                      as СР_ПЛОЩАДЬ,
+	round(avg(last_price / total_area)::numeric, 2)                         as СР_ЦЕНА_КВ_М,
+	percentile_disc(0.5) within group (order by rooms)                      as МЕДИАНА_КОМНАТЫ,
+	percentile_disc(0.5) within group (order by floor)                      as МЕДИАНА_ЭТАЖ,
+	percentile_disc(0.5) within group (order by floors_total)::integer      as МЕДИАНА_ЭТ_ДОМА,
+	percentile_disc(0.5) within group (order by ceiling_height)             as МЕДИАНА_ПОТОЛОК,
+	round(avg(kitchen_area)::numeric, 2)                                    as СР_ПЛОЩ_КУХНИ,
+	percentile_disc(0.5) within group (order by balcony) ::integer          as МЕДИАНА_БАЛКОНЫ,
+	percentile_cont(0.5) within group (order by airports_nearest)           as ДО_АЭРОПОРТА,
+	percentile_disc(0.5) within group (order by parks_around3000)::integer  as КОЛ_ПАРКОВ,
+	percentile_disc(0.5) within group (order by ponds_around3000)::integer  as КОЛ_ВОДОЕМОВ
 from general_tab
 where type = 'город'
 group by category, region
@@ -120,15 +117,13 @@ order by category, region;
 ----------------+---------------+----------+------------+---------------+------------+---------------+---------------+-------------+---------------+------------+----------+------------+
 
 
--- Задача 2: Сезонность объявлений
--- Результат запроса должен ответить на такие вопросы:
--- 1. В какие месяцы наблюдается наибольшая активность в публикации объявлений о продаже недвижимости? 
---    А в какие — по снятию? Это показывает динамику активности покупателей.
--- 2. Совпадают ли периоды активной публикации объявлений и периоды, 
---    когда происходит повышенная продажа недвижимости (по месяцам снятия объявлений)?
--- 3. Как сезонные колебания влияют на среднюю стоимость квадратного метра и среднюю площадь квартир? 
---    Что можно сказать о зависимости этих параметров от месяца?
-
+/*
+Сезонность объявлений
+Результат запроса должен ответить на такие вопросы:
+	1. В какие месяцы наблюдается наибольшая активность в публикации объявлений о продаже недвижимости? А в какие — по снятию? Это показывает динамику активности покупателей.
+	2. Совпадают ли периоды активной публикации объявлений и периоды, когда происходит повышенная продажа недвижимости (по месяцам снятия объявлений)?
+	3. Как сезонные колебания влияют на среднюю стоимость квадратного метра и среднюю площадь квартир? Что можно сказать о зависимости этих параметров от месяца?
+*/
 with
 --аномально высокие и низкие значения
 confines as (
@@ -151,49 +146,48 @@ id_tab as (
 ),
 --таблица с месяцем публикации, месяцем снятия, площадью, стоимостью кв.м. (без выбросов)
 general_tab_1 as (
-	select  f.total_area                                                              as total_area,
-			extract(month from a.first_day_exposition)                                as month_first_day_exposition ,
-			extract(month from (a.first_day_exposition + a.days_exposition::integer)) as month_final_day_exposition,
-			a.last_price / f.total_area                                               as price_square_meter
+	select
+		f.total_area                                                              as total_area,
+		extract(month from a.first_day_exposition)                                as month_first_day_exposition ,
+		extract(month from (a.first_day_exposition + a.days_exposition::integer)) as month_final_day_exposition,
+		a.last_price / f.total_area                                               as price_square_meter
 	from real_estate.flats              as f
 	left join real_estate.advertisement as a using(id)
 	where id in (select * from id_tab)
 ),
---присваиваем ранг, в from: добавляем имя месяца, считаем количество объявлений по месяцам с данными о средней площади
---и стоимости кв. метра для публикаций
+--присваиваем ранг; в from добавляем имя месяца, считаем количество объявлений по месяцам с данными о средней площади и стоимости кв. метра для публикаций
 advertisement_month_first_rank as (
-	select  row_number() over()         as rank_month, *
-	from  (
-			select
-				month_first_day_exposition,
-				case month_first_day_exposition
-				when 1 then 'январь'
-				when 2 then 'февраль'
-				when 3 then 'март'
-				when 4 then 'апрель'
-				when 5 then 'май'
-				when 6 then 'июнь'
-				when 7 then 'июль'
-				when 8 then 'август'
-				when 9 then 'сентябрь'
-				when 10 then 'октябрь'
-				when 11 then 'ноябрь'
-				else 'декабрь' end      as month_name_first_day_exposition,
-				count(*)                as count_first_day_exposition,
-				avg(total_area)         as avg_total_area,
-				avg(price_square_meter) as avg_price_square_meter
-			from general_tab_1
-			group by month_first_day_exposition, month_name_first_day_exposition
-			order by count_first_day_exposition desc) as advertisement_month_first
+	select  row_number() over() as rank_month, *
+	from (
+		select
+			month_first_day_exposition,
+			case month_first_day_exposition
+			when 1 then 'январь'
+			when 2 then 'февраль'
+			when 3 then 'март'
+			when 4 then 'апрель'
+			when 5 then 'май'
+			when 6 then 'июнь'
+			when 7 then 'июль'
+			when 8 then 'август'
+			when 9 then 'сентябрь'
+			when 10 then 'октябрь'
+			when 11 then 'ноябрь'
+			else 'декабрь' end      as month_name_first_day_exposition,
+			count(*)                as count_first_day_exposition,
+			avg(total_area)         as avg_total_area,
+			avg(price_square_meter) as avg_price_square_meter
+		from general_tab_1
+		group by month_first_day_exposition, month_name_first_day_exposition
+		order by count_first_day_exposition desc) as advertisement_month_first
 ),
---присваиваем ранг, в from добавляем имя месяца, считаем количество объявлений по месяцам с данными о средней площади
---и стоимости кв. метра для продаж(снятий)
+--присваиваем ранг, в from добавляем имя месяца, считаем количество объявлений по месяцам с данными о средней площади и стоимости кв. метра для продаж(снятий)
 advertisement_month_final_rank as (
 	select row_number() over()              as rank_month, *
 	from (
-			select  
-				month_final_day_exposition,
-				case month_final_day_exposition
+		select  
+			month_final_day_exposition,
+			case month_final_day_exposition
 				when 1 then 'январь'
 				when 2 then 'февраль'
 				when 3 then 'март'
@@ -206,22 +200,23 @@ advertisement_month_final_rank as (
 				when 10 then 'октябрь'
 				when 11 then 'ноябрь'
 				when 12 then 'декабрь'
-				else null end               as month_name_final_day_exposition,
-					count(*)                as count_month_final_day_exposition,
-					avg(total_area)         as avg_total_area,
-					avg(price_square_meter) as avg_price_square_meter
-			from general_tab_1
-			where month_final_day_exposition is not null
-			group by month_final_day_exposition, month_name_final_day_exposition
-			order by count_month_final_day_exposition desc) as advertisement_month_final
+			else null
+			end	                as month_name_final_day_exposition,
+			count(*)                as count_month_final_day_exposition,
+			avg(total_area)         as avg_total_area,
+			avg(price_square_meter) as avg_price_square_meter
+		from general_tab_1
+		where month_final_day_exposition is not null
+		group by month_final_day_exposition, month_name_final_day_exposition
+		order by count_month_final_day_exposition desc) as advertisement_month_final
 ),
 --месяца с количеством публикаций и продаж(снятий) в порядке убывания
 activity as (
 	select  fir.rank_month                       as ранг,
-			fir.month_name_first_day_exposition  as месяц_публикаций,
-			fir.count_first_day_exposition       as колич_публикаций,
-			fin.month_name_final_day_exposition  as месяц_продаж,
-			fin.count_month_final_day_exposition as колич_продаж
+		fir.month_name_first_day_exposition  as месяц_публикаций,
+		fir.count_first_day_exposition       as колич_публикаций,
+		fin.month_name_final_day_exposition  as месяц_продаж,
+		fin.count_month_final_day_exposition as колич_продаж
 	from advertisement_month_first_rank as fir
 	left join advertisement_month_final_rank as fin using(rank_month)
  	)
@@ -242,13 +237,13 @@ activity as (
   --12|май             |            1086|май         |         901|
   ----+----------------+----------------+------------+------------+
 select  fir.month_first_day_exposition                as НОМЕР_МЕСЯЦ,
-		fir.month_name_first_day_exposition           as МЕСЯЦ,
-		fir.count_first_day_exposition                as КОЛ_ПУБЛИКАЦИЙ,
-		round(fir.avg_total_area::numeric, 2)         as СР_ПЛОЩ_ПУБЛ,
-		round(fir.avg_price_square_meter::numeric, 2) as СР_СТОИМ_КВ_М_ПУБЛ,
-		fin.count_month_final_day_exposition          as КОЛ_ПРОДАЖ,
-		round(fin.avg_total_area::numeric, 2)         as СР_ПЛОЩ_ПРОД,
-		round(fin.avg_price_square_meter::numeric, 2) as СР_СТОИМ_КВ_М_ПРОД
+	fir.month_name_first_day_exposition           as МЕСЯЦ,
+	fir.count_first_day_exposition                as КОЛ_ПУБЛИКАЦИЙ,
+	round(fir.avg_total_area::numeric, 2)         as СР_ПЛОЩ_ПУБЛ,
+	round(fir.avg_price_square_meter::numeric, 2) as СР_СТОИМ_КВ_М_ПУБЛ,
+	fin.count_month_final_day_exposition          as КОЛ_ПРОДАЖ,
+	round(fin.avg_total_area::numeric, 2)         as СР_ПЛОЩ_ПРОД,
+	round(fin.avg_price_square_meter::numeric, 2) as СР_СТОИМ_КВ_М_ПРОД
 from advertisement_month_first_rank as fir
 join advertisement_month_final_rank as fin on fir.month_first_day_exposition =  fin.month_final_day_exposition
 order by НОМЕР_МЕСЯЦ;
@@ -271,16 +266,14 @@ order by НОМЕР_МЕСЯЦ;
 
 
 
--- Задача 3: Анализ рынка недвижимости Ленобласти
--- Результат запроса должен ответить на такие вопросы:
--- 1. В каких населённые пунктах Ленинградской области наиболее активно публикуют объявления о продаже недвижимости?
--- 2. В каких населённых пунктах Ленинградской области — самая высокая доля снятых с публикации объявлений? 
---    Это может указывать на высокую долю продажи недвижимости.
--- 3. Какова средняя стоимость одного квадратного метра и средняя площадь продаваемых квартир в различных населённых пунктах? 
---    Есть ли вариация значений по этим метрикам?
--- 4. Среди выделенных населённых пунктов какие пункты выделяются по продолжительности публикации объявлений? 
---    То есть где недвижимость продаётся быстрее, а где — медленнее.
-
+/*
+Анализ рынка недвижимости Ленобласти
+Результат запроса должен ответить на такие вопросы:
+1. В каких населённые пунктах Ленинградской области наиболее активно публикуют объявления о продаже недвижимости?
+2. В каких населённых пунктах Ленинградской области — самая высокая доля снятых с публикации объявлений? 
+3. Какова средняя стоимость одного квадратного метра и средняя площадь продаваемых квартир в различных населённых пунктах? Есть ли вариация значений по этим метрикам?
+4. Среди выделенных населённых пунктов какие пункты выделяются по продолжительности публикации объявлений? То есть где недвижимость продаётся быстрее, а где — медленнее.
+*/
 with
 --аномально высокие и низкие значения
 confines as (
@@ -304,15 +297,14 @@ id_tab as (
 --таблица по населенным пунктам области со средней стоимостью за  кв.м.и без выбросов
 general_tab as (
 	select  *,
-			a.last_price / f.total_area                            as price_square_meter
+		a.last_price / f.total_area as price_square_meter
 	from real_estate.flats              as f
 	left join real_estate.advertisement as a using(id)
 	left join real_estate.city          as c  using(city_id)
 	left join real_estate.type          as t using(type_id)
 	where id in (select * from id_tab) and c.city != 'Санкт-Петербург'
 ),
---для количества объявлений по населенным пунктам области найдем значение, выше которого находится 5% данных;
---в from для каждого населенного пункта считаем общее количество объявлений
+--для количества объявлений по населенным пунктам области найдем значение, выше которого находится 5% данных; в from для каждого населенного пункта считаем общее количество объявлений
 confines_city as (
 	select percentile_disc(0.95) within group (order by count_flats)
 	from (select count(city) as count_flats from general_tab group by city) as t
@@ -334,7 +326,7 @@ select
 	round(avg(last_price / total_area)::numeric, 2)                                                                     as СР_ЦЕНА_КВ_М
 from general_tab
 group by city
---оставим 5% городов с самым большим количеством объявлеий
+--оставим 5% городов с самым большим количеством объявлений
 having count(city) > (select * from confines_city)
 order by count(city) desc
 )
@@ -362,3 +354,4 @@ order by ДОЛЯ_ПРОДАННЫХ
 --Новое Девяткино|деревня      |       120|                     0.032|      106|         0.883|         14|         97|     0.000|    0.000|     1.000|     50.52|    76879.07|         53.06|           81019.29|
 --Сертолово      |город        |       117|                     0.032|      101|         0.863|         16|         88|     0.000|    0.009|     0.991|     53.62|    69566.26|         53.06|           81019.29|
 -----------------+-------------+----------+--------------------------+---------+--------------+-----------+-----------+----------+---------+----------+----------+------------+--------------+-------------------+
+
