@@ -1,4 +1,4 @@
-**ТОП-10 спикеров по количеству оваций**
+--ТОП-10 спикеров по количеству оваций**
 
 with t4 as (
     select * , COALESCE(applause_count, 0) as applause_count_2
@@ -22,7 +22,7 @@ limit 10;
 
 
 
-**ТОП-10 выступлений по количеству оваций**
+--ТОП-10 выступлений по количеству оваций**
 
 select b1.title, sum(b1.applause_count)
 from ted.talks as b1
@@ -37,7 +37,7 @@ limit 10;
 
 
 
-**ТОП-10 самых смешных выступлений**
+--ТОП-10 самых смешных выступлений**
 
 select b1.title, sum(b1.laughter_count)
 from ted.talks as b1
@@ -52,7 +52,7 @@ limit 10;
 
 
 
-**ТОП-10 самых популярных тем**
+--ТОП-10 самых популярных тем**
 
 select a1.main_tag, count(a1.main_tag)
 from ted.talks as a1 
@@ -60,4 +60,5 @@ left join ted.events as a2 on a1.event_id = a2.conf_id
 where date(a1.film_date) BETWEEN {{date_film_from}} AND {{date_film_to}} and a2.country in {{region_par}} 
 group by a1.main_tag
 order BY count(a1.main_tag) desc
+
 limit 10;
